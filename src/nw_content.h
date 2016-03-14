@@ -109,6 +109,7 @@ void DocumentFinishHook(blink::WebFrame* frame,
 #endif
  void SetMainExtensionId(const std::string& id);
  const std::string& GetMainExtensionId();
+ bool OnMouseButtonFwdBwd(bool forward);
 }
 
 #endif

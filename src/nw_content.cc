@@ -1335,4 +1335,14 @@ const std::string& GetMainExtensionId() {
   return g_extension_id;
 }
 
+bool OnMouseButtonFwdBwd(bool forward) {
+  scoped_ptr<base::ListValue> argument(new base::ListValue());
+  if (forward)
+    nw::SendEventToApp("nw.App.onMouseForward", std::move(argument));
+  else
+    nw::SendEventToApp("nw.App.onMouseBackward", std::move(argument));
+
+  return true;
+}
+
 } //namespace nw
