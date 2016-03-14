@@ -1156,4 +1156,14 @@ void SetPinningRenderer(bool pin) {
   g_pinning_renderer = pin;
 }
 
+bool OnMouseButtonFwdBwd(bool forward) {
+  scoped_ptr<base::ListValue> argument(new base::ListValue());
+  if (forward)
+    nw::SendEventToApp("nw.App.onMouseForward", std::move(argument));
+  else
+    nw::SendEventToApp("nw.App.onMouseBackward", std::move(argument));
+
+  return true;
+}
+
 } //namespace nw

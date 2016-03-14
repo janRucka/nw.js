@@ -7,7 +7,9 @@ var dataPath;
 
 var eventsMap = {
   'open':             'onOpen',
-  'reopen':           'onReopen'
+  'reopen':           'onReopen',
+  'mouseForward':     'onMouseForward',
+  'mouseBackward':    'onMouseBackward'
 };
 
 var filteredArgv = [
