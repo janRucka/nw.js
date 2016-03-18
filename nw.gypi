@@ -805,30 +805,6 @@
       'target_name': 'nw_strip_symbol',
       'type': 'none',
       'conditions': [
-        ['OS=="mac"', {
-          'variables': {
-          },
-          'actions': [
-            {
-              'action_name': 'dump_symbol',
-              'inputs': [
-                '<(DEPTH)/content/nw/tools/dump_mac_syms',
-                '<(PRODUCT_DIR)/dump_syms',
-              ],
-              'outputs': [
-                '<(PRODUCT_DIR)/nwjs.breakpad.tar',
-              ],
-              'action': ['<(DEPTH)/content/nw/tools/dump_mac_syms',
-                         ],
-              'message': 'Dumping breakpad symbols to <(_outputs)',
-              'process_outputs_as_sources': 1,
-            },
-          ],
-          'dependencies': [
-            'nwjs',
-            '../breakpad/breakpad.gyp:dump_syms',
-          ],
-        }],
        ['OS=="win"', {
           'actions': [
             {
@@ -837,6 +813,7 @@
                 '<(DEPTH)/content/nw/tools/dump_win_syms.py',
                 '<(PRODUCT_DIR)/nw.exe',
                 '<(PRODUCT_DIR)/nw.dll',
+                '<(PRODUCT_DIR)/node.dll',
               ],
               'outputs': [
                 '<(PRODUCT_DIR)/nw.sym.7z',
@@ -845,6 +822,7 @@
                          '<(DEPTH)/content/nw/tools/dump_win_syms.py',
                          '<(PRODUCT_DIR)/nw.exe',
                          '<(PRODUCT_DIR)/nw.dll',
+                         '<(PRODUCT_DIR)/node.dll',
                          '<(PRODUCT_DIR)/nw.sym.7z',
                          ],
               'message': 'Dumping breakpad symbols to <(_outputs)',

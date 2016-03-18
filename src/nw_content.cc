@@ -2,6 +2,7 @@
 
 #include "nw_content.h"
 #include "nw_base.h"
+#include "base/files/file_enumerator.h"
 
 #include "base/command_line.h"
 #include "base/files/file_util.h"
@@ -230,10 +231,11 @@ int MainPartsPreCreateThreadsHook() {
     std::string name;
     package->root()->GetString("name", &name);
     if (!name.empty() && PathService::Get(chrome::DIR_USER_DATA, &user_data_dir)) {
-      base::FilePath old_dom_storage = user_data_dir
-        .Append(FILE_PATH_LITERAL("Local Storage"))
-        .Append(FILE_PATH_LITERAL("file__0.localstorage"));
-      if (base::PathExists(old_dom_storage)) {
+      base::FilePath old_dom_storage_dir = user_data_dir
+        .Append(FILE_PATH_LITERAL("Local Storage"));
+      base::FileEnumerator enum0(old_dom_storage_dir, false, base::FileEnumerator::FILES, FILE_PATH_LITERAL("*_0.localstorage"));
+      base::FilePath old_dom_storage = enum0.Next();
+      if (!old_dom_storage.empty()) {
         std::string id = crx_file::id_util::GenerateId(name);
         GURL origin("chrome-extension://" + id + "/");
         base::FilePath new_storage_dir = user_data_dir.Append(FILE_PATH_LITERAL("Default"))
@@ -517,37 +519,36 @@ void ContextCreationHook(blink::WebLocalFrame* frame, ScriptContext* context) {
   }
 
   v8::Local<v8::Context> node_context2;
-  g_get_node_context_fn(&node_context2);
-  if (!mixed_context) {
-    v8::Local<v8::Context> g_context =
-      v8::Local<v8::Context>::New(isolate, node_context2);
-    v8::Local<v8::Object> node_global = g_context->Global();
+  if (mixed_context)
+    node_context2 = context->v8_context();
+  else
+    g_get_node_context_fn(&node_context2);
+  v8::Local<v8::Context> g_context =
+    v8::Local<v8::Context>::New(isolate, node_context2);
+  v8::Local<v8::Object> node_global = g_context->Global();
 
+  if (!mixed_context) {
     context->v8_context()->SetAlignedPointerInEmbedderData(NODE_CONTEXT_EMBEDDER_DATA_INDEX, g_get_node_env_fn());
     context->v8_context()->SetSecurityToken(g_context->GetSecurityToken());
-
-    v8::Handle<v8::Object> nw = AsObjectOrEmpty(CreateNW(context, node_global, g_context));
-#if 1
-    v8::Local<v8::Array> symbols = v8::Array::New(isolate, 5);
-    symbols->Set(0, v8::String::NewFromUtf8(isolate, "global"));
-    symbols->Set(1, v8::String::NewFromUtf8(isolate, "process"));
-    symbols->Set(2, v8::String::NewFromUtf8(isolate, "Buffer"));
-    symbols->Set(3, v8::String::NewFromUtf8(isolate, "root"));
-    symbols->Set(4, v8::String::NewFromUtf8(isolate, "require"));
-
-    g_context->Enter();
-    for (unsigned i = 0; i < symbols->Length(); ++i) {
-      v8::Local<v8::Value> key = symbols->Get(i);
-      v8::Local<v8::Value> val = node_global->Get(key);
-      nw->Set(key, val);
-    }
-    g_context->Exit();
-#endif
   }
+  v8::Handle<v8::Object> nw = AsObjectOrEmpty(CreateNW(context, node_global, g_context));
+
+  v8::Local<v8::Array> symbols = v8::Array::New(isolate, 5);
+  symbols->Set(0, v8::String::NewFromUtf8(isolate, "global"));
+  symbols->Set(1, v8::String::NewFromUtf8(isolate, "process"));
+  symbols->Set(2, v8::String::NewFromUtf8(isolate, "Buffer"));
+  symbols->Set(3, v8::String::NewFromUtf8(isolate, "root"));
+  symbols->Set(4, v8::String::NewFromUtf8(isolate, "require"));
+
+  g_context->Enter();
+  for (unsigned i = 0; i < symbols->Length(); ++i) {
+    v8::Local<v8::Value> key = symbols->Get(i);
+    v8::Local<v8::Value> val = node_global->Get(key);
+    nw->Set(key, val);
+  }
+  g_context->Exit();
 
   std::string set_nw_script = "'use strict';";
-  if (mixed_context)
-    set_nw_script += "var nw = global;";
   {
     blink::WebScopedMicrotaskSuppression suppression;
     v8::Context::Scope cscope(context->v8_context());

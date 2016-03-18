@@ -59,7 +59,7 @@ By default NW.js only allows one instance of your app. If you want to allow mult
 
 ### bg-script
 
-* `{String}` background script
+* `{String}` background script. The script is executed in the background page at the start of application.
 
 ### window
 
@@ -160,6 +160,10 @@ Most of window subfields are inherited by sub windows opened by `window.open()` 
 * `show` -> `true`
 
 All of the window subfields can be overwritten by using [`new-win-policy` event](Window.md#event-new-win-policy-frame-url-policy).
+
+### id
+
+* `{String}` the `id` used to identify the window. This will be used to remember the size and position of the window and restore that geometry when a window with the same id is later opened. [See also the Chrome App documentation](https://developer.chrome.com/apps/app_window#type-CreateWindowOptions)
 
 ### title
 

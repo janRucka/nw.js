@@ -26,6 +26,10 @@
 
 + `Shortcut` API does **NOT** map <kbd>Ctrl</kbd> modifier to <kbd>&#8984;</kbd> on Mac OS X. However 0.13.0 supports `Command` modifier in cross platform way. So it's your responsible to detect the OS and choose the right modifier when registering hotkeys. See [Shortcut.key](../../References/Shortcut.md#shortcutkey) for details.
 
+### Menu
++ Menus on Mac is created with default menubar, including `app-name`, `Edit` and `Window`, instead of minimal menubar in 0.12.
++ To fix the name of application menu, you will need to modify  `nwjs.app/Contents/Resources/en.lproj/InfoPlist.strings` instead of `nwjs.app/Contents/Info.plist`. See [Customize Menubar](../Advanced/Customize Menubar.md#mac-os-x).
+
 ### Manifest Format
 
 + [`single-instance`](../../References/Manifest Format.md#single-instance) is **deprecated** and it's always `true`. You **CANNOT** have multiple instances for your app unless you're using different user data directory (by `--user-data-dir`). You may also want to use the [open event](../../References/App.md#event-openargs): the first instance will be notified with this event when user tries to launch the second instance.
@@ -37,7 +41,7 @@
 
 ### Window
 
-+ There is an id to identify each window. This will be used to remember the size and position of the window and restore that geometry when a window with the same id is later opened. The default id is `.main`. It could be specified in [Window.open](../../References/Window.md#windowopenurl-options-callback)
++ There is an `id` to identify each window. This will be used to remember the size and position of the window and restore that geometry when a window with the same `id` is later opened. It could be specified in [Window.open](../../References/Window.md#windowopenurl-options-callback) or [`id` of window subfields in manifest](../../References/Manifest Format.md#id)
 + Event `capturepagedone` of [`Window` API](../../References/Window.md#event-capturepagedone) is **deprecated**.Use the callback with the [`win.capturePage(callback [, config ])`](../../References/Window.md#wincapturepagecallback--config-) instead.
 + [Window.open](../../References/Window.md#windowopenurl-options-callback) is changed to passing the created window as the argument of the callback.
 + [Window.showDevtools](../../References/Window.md#winshowdevtoolsiframe-headless-callback) is changed to passing the created window as the argument of the callback.
@@ -55,7 +59,6 @@
 + The following window options passed to nw.Window.open() is not effective on Linux: `min_width`, `min_height`, `max_width`, `max_height`, `resizable` for now; try to set them in the callback.
 + `nw.Window.get(window_object)` is not working as expected when passing the argument; use `window_object.nw.Window.get()` as a workaround.
 + `nw.Window.reloadDev()` is not supported for now
-+ `close` event of `nw.Window`: <kbd>&#8984;</kbd>+<kbd>Q</kbd> does not pass `true` as the first argument to the event.
 + `closed` event of `nw.Window`: `App.quit()` doesn't trigger this event.
 + `devtools-closed` event of nw.Window is not supported for now.
 + `as_desktop` option is not supported for now
@@ -63,5 +66,4 @@
 + `nwUserAgent` attribute of `<iframe>` is not supported for now.
 + `--data-path` command line argument is not supported for now.
 + `tooltip` of `MenuItem` is not supported for now.
-+ `nw.App.fullArgv` is not supported for now.
 + `nw.App.setCrashDumpDir()` is not supported; crash dump is stored in `app-data-path/Crash Reports`
