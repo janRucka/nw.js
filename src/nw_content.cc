@@ -154,6 +154,7 @@ bool g_reloading_app = false;
 bool g_pinning_renderer = true;
 int g_cdt_process_id = -1;
 std::string g_extension_id;
+bool g_skip_render_widget_hidden = false;
 
 static inline v8::Local<v8::String> v8_str(const char* x) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
@@ -843,6 +844,10 @@ void willHandleNavigationPolicy(content::RenderView* rv,
 
 void ExtensionDispatcherCreated(extensions::Dispatcher* dispatcher) {
   g_dispatcher = dispatcher;
+  const base::CommandLine& command_line =
+      *base::CommandLine::ForCurrentProcess();
+  if (command_line.HasSwitch(switches::kDisableRAFThrottling))
+    g_skip_render_widget_hidden = true;
 }
 
 void CalcNewWinParams(content::WebContents* new_contents, void* params,
@@ -1189,6 +1194,10 @@ bool OnMouseButtonFwdBwd(bool forward) {
     nw::SendEventToApp("nw.App.onMouseBackward", std::move(argument));
 
   return true;
+}
+
+bool RenderWidgetWasHiddenHook(content::RenderWidget* rw) {
+  return g_skip_render_widget_hidden;
 }
 
 } //namespace nw
