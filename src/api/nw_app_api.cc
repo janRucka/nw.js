@@ -7,6 +7,7 @@
 #include "chrome/browser/extensions/devtools_util.h"
 #include "chrome/browser/extensions/extension_service.h"
 #include "content/nw/src/nw_base.h"
+#include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/web_contents.h"
@@ -31,6 +32,32 @@ void SetProxyConfigCallback(
   proxy_service->ResetConfigService(make_scoped_ptr(new net::ProxyConfigServiceFixed(proxy_config)));
   done->Signal();
 }
+
+class DefaultBrowserNwHandler : public ShellIntegration::DefaultWebClientObserver {
+public:
+  DefaultBrowserNwHandler(
+    base::Callback<void(ShellIntegration::DefaultWebClientUIState)> is_default_browser
+    = base::Callback<void(ShellIntegration::DefaultWebClientUIState)>(),
+    base::Callback<void(bool)> set_default_browser = base::Callback<void(bool)>()) :
+    is_default_browser_(is_default_browser), set_default_browser_(set_default_browser)
+  {}
+
+  ~DefaultBrowserNwHandler() override {}
+  void SetDefaultWebClientUIState(ShellIntegration::DefaultWebClientUIState state) override {
+    if (!is_default_browser_.is_null())
+      is_default_browser_.Run(state);
+  }
+  void OnSetAsDefaultConcluded(bool succeeded) override {
+    if (!set_default_browser_.is_null())
+      set_default_browser_.Run(succeeded);
+  }
+  bool IsOwnedByWorker() override { return true; }
+  bool IsInteractiveSetDefaultPermitted() override { return true; }
+
+private:
+  base::Callback<void(ShellIntegration::DefaultWebClientUIState)> is_default_browser_;
+  base::Callback<void(bool)> set_default_browser_;
+};
 } // namespace
 
 namespace extensions {
@@ -157,5 +184,51 @@ bool NwAppCrashBrowserFunction::RunAsync() {
   return true;
 }
 
+bool NwAppIsDefaultBrowserFunction::RunAsync() {
+  scoped_refptr<ShellIntegration::DefaultBrowserWorker> browserWorker(
+    new ShellIntegration::DefaultBrowserWorker(
+      new DefaultBrowserNwHandler(
+        base::Bind(&NwAppIsDefaultBrowserFunction::OnCallback, this))));
+  browserWorker->StartCheckIsDefault();
+  return true;
+}
+
+void NwAppIsDefaultBrowserFunction::OnCallback(
+  ShellIntegration::DefaultWebClientUIState state) {
+  results_ = scoped_ptr<base::ListValue>(new base::ListValue());
+  switch (state)
+  {
+  case ShellIntegration::STATE_PROCESSING:
+    return;
+  case ShellIntegration::STATE_NOT_DEFAULT:
+    results_->AppendString("not default");
+    break;
+  case ShellIntegration::STATE_IS_DEFAULT:
+    results_->AppendString("default");
+    break;
+  case ShellIntegration::STATE_UNKNOWN:
+  default:
+    results_->AppendString("unknown");
+  }
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  SendResponse(true);
+}
+
+bool NwAppSetDefaultBrowserFunction::RunAsync() {
+  scoped_refptr<ShellIntegration::DefaultBrowserWorker> browserWorker(
+    new ShellIntegration::DefaultBrowserWorker(
+      new DefaultBrowserNwHandler(
+        base::Callback<void(ShellIntegration::DefaultWebClientUIState)>(),
+        base::Bind(&NwAppSetDefaultBrowserFunction::OnCallback, this))));
+  browserWorker->StartSetAsDefault();
+  return true;
+}
+
+void NwAppSetDefaultBrowserFunction::OnCallback(bool success) {
+  results_ = scoped_ptr<base::ListValue>(new base::ListValue());
+  results_->AppendBoolean(success);
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  SendResponse(true);
+}
 
 } // namespace extensions
