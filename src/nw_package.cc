@@ -35,6 +35,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread_restrictions.h"
 #include "base/values.h"
+#include "chrome/common/chrome_paths_internal.h"
 #include "third_party/zlib/google/zip.h"
 #include "content/nw/src/common/shell_switches.h"
 #include "content/public/common/content_switches.h"
@@ -281,6 +282,51 @@ base::DictionaryValue* Package::window() {
   return window;
 }
 
+void Package::CopyCookiesFromNW12() {
+#if defined(OS_WIN)
+  base::ThreadRestrictions::SetIOAllowed(true);
+  base::FilePath nw12Path, nw13Path;
+  if (!chrome::GetDefaultUserDataDirectory(&nw13Path))
+    return;
+
+  std::vector<base::FilePath::StringType> components;
+  nw13Path.GetComponents(&components);
+  nw13Path.clear();
+
+  for (size_t i = 0; i < components.size(); i++)
+  {
+    if (i != components.size() - 1) {
+      nw12Path = nw12Path.Append(components[i]);
+    }
+    else {
+      nw12Path = nw12Path.Append(base::FilePath::FromUTF8Unsafe(GetName()));
+      nw13Path = nw13Path.Append(base::FilePath::FromUTF8Unsafe(GetName()));
+    }
+    nw13Path = nw13Path.Append(components[i]);
+  }
+
+  nw13Path = nw13Path.Append(L"Default");
+  nw13Path = nw13Path.Append(L"Storage");
+  nw13Path = nw13Path.Append(L"ext");
+  nw13Path = nw13Path.Append(L"ckjpageadhfekbilpnlbcjgbflimllbk");
+  nw13Path = nw13Path.Append(L"FEAE9788A455");
+
+  if (!base::PathExists(nw13Path)) {
+    if (!base::CreateDirectory(nw13Path))
+      return;
+  }
+
+  nw13Path = nw13Path.Append(L"Cookies");
+
+  if (base::PathExists(nw13Path))
+    return;
+
+  nw12Path = nw12Path.Append(L"Cookies");
+  if (base::PathExists(nw12Path))
+    CopyFile(nw12Path, nw13Path);
+#endif
+}
+
 bool Package::InitFromPath(const base::FilePath& path_in) {
   base::ThreadRestrictions::SetIOAllowed(true);
   FilePath extracted_path, path(path_in);
@@ -367,6 +413,7 @@ bool Package::InitFromPath(const base::FilePath& path_in) {
   ReadJsFlags();
 
   RelativePathToURI(path_, this->root());
+  CopyCookiesFromNW12();
   return true;
 }
 
@@ -383,6 +430,7 @@ void Package::InitWithDefault() {
 
   // Window should show in center by default.
   window->SetString(switches::kmPosition, "center");
+  CopyCookiesFromNW12();
 }
 
 bool Package::ExtractPath(const base::FilePath& path_to_extract, 
