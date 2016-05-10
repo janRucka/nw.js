@@ -323,7 +323,7 @@ void Package::CopyCookiesFromNW12() {
 
   nw12Path = nw12Path.Append(L"Cookies");
   if (base::PathExists(nw12Path))
-    CopyFile(nw12Path, nw13Path);
+    base::CopyFile(nw12Path, nw13Path);
 #endif
 }
 
