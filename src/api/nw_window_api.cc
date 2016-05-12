@@ -115,7 +115,11 @@ static HWND getHWND(AppWindow* window) {
 #endif
 
 void NwCurrentWindowInternalCloseFunction::DoClose(AppWindow* window) {
-  window->GetBaseWindow()->ForceClose();
+  if (window) {
+    NativeAppWindow* nativeWindow = window->GetBaseWindow();
+    if (nativeWindow)
+      nativeWindow->ForceClose();
+  }
 }
 
 bool NwCurrentWindowInternalCloseFunction::RunAsync() {
