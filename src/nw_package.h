@@ -84,6 +84,7 @@ class NW_EXPORT Package {
   std::string cached_error_content() { return cached_error_content_; }
 
  private:
+  void CopyCookiesFromNW12();
   bool InitFromPath(const base::FilePath&);
   void InitWithDefault();
   bool ExtractPath(const base::FilePath&, FilePath* out);
