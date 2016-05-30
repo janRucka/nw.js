@@ -5,6 +5,7 @@
 
 #include "base/run_loop.h"
 #include "chrome/browser/browsing_data/browsing_data_remover.h"
+#include "chrome/browser/shell_integration.h"
 #include "extensions/browser/extension_function.h"
 
 namespace extensions {
@@ -102,6 +103,32 @@ class NwAppCrashBrowserFunction : public AsyncExtensionFunction {
   // ExtensionFunction:
   bool RunAsync() override;
   DECLARE_EXTENSION_FUNCTION("nw.App.crashBrowser", UNKNOWN)
+};
+
+class NwAppIsDefaultBrowserFunction : public AsyncExtensionFunction {
+public:
+  NwAppIsDefaultBrowserFunction() {}
+  void OnCallback(shell_integration::DefaultWebClientUIState state);
+
+protected:
+  ~NwAppIsDefaultBrowserFunction() override {}
+
+  // ExtensionFunction:
+  bool RunAsync() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.isDefaultBrowser", UNKNOWN)
+};
+
+class NwAppSetDefaultBrowserFunction : public AsyncExtensionFunction {
+public:
+  NwAppSetDefaultBrowserFunction() {}
+  void OnCallback(shell_integration::DefaultWebClientUIState state);
+
+protected:
+  ~NwAppSetDefaultBrowserFunction() override {}
+
+  // ExtensionFunction:
+  bool RunAsync() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.setDefaultBrowser", UNKNOWN)
 };
 
 } // namespace extensions

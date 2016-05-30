@@ -6,6 +6,8 @@
 [implemented_in="content/nw/src/api/nw_app_api.h"]
 namespace nw.App {
   callback EventCallback = void();
+  callback StringCallback = void(DOMString data);
+  callback BooleanCallback = void(boolean data);
   interface Functions {
     // crash the renderer for testing
     [nocompile] static void crashRenderer();
@@ -25,6 +27,8 @@ namespace nw.App {
     static DOMString[] getArgvSync();
     static DOMString getDataPath();
     static void crashBrowser();
+    static void isDefaultBrowser(StringCallback callback);
+    static void setDefaultBrowser(BooleanCallback callback);
   };
   interface Events {
     static void onOpen(DOMString cmdline);

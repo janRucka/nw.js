@@ -7,6 +7,7 @@
 #include "chrome/browser/extensions/devtools_util.h"
 #include "chrome/browser/extensions/extension_service.h"
 #include "content/nw/src/nw_base.h"
+#include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/web_contents.h"
@@ -31,6 +32,24 @@ void SetProxyConfigCallback(
   proxy_service->ResetConfigService(make_scoped_ptr(new net::ProxyConfigServiceFixed(proxy_config)));
   done->Signal();
 }
+
+class DefaultBrowserNwHandler : public shell_integration::DefaultWebClientObserver {
+public:
+  DefaultBrowserNwHandler(
+    base::Callback<void(shell_integration::DefaultWebClientUIState)> is_default_browser
+    = base::Callback<void(shell_integration::DefaultWebClientUIState)>()) :
+    is_default_browser_(is_default_browser)
+  {}
+
+  ~DefaultBrowserNwHandler() override {}
+  void SetDefaultWebClientUIState(shell_integration::DefaultWebClientUIState state) override {
+    if (!is_default_browser_.is_null())
+      is_default_browser_.Run(state);
+  }
+
+private:
+  base::Callback<void(shell_integration::DefaultWebClientUIState)> is_default_browser_;
+};
 } // namespace
 
 namespace extensions {
@@ -160,5 +179,64 @@ bool NwAppCrashBrowserFunction::RunAsync() {
   return true;
 }
 
+bool NwAppIsDefaultBrowserFunction::RunAsync() {
+  scoped_refptr<shell_integration::DefaultBrowserWorker> browserWorker(
+    new shell_integration::DefaultBrowserWorker(
+      new DefaultBrowserNwHandler(
+        base::Bind(&NwAppIsDefaultBrowserFunction::OnCallback, this)), true));
+  browserWorker->StartCheckIsDefault();
+  return true;
+}
+
+void NwAppIsDefaultBrowserFunction::OnCallback(
+  shell_integration::DefaultWebClientUIState state) {
+  results_ = scoped_ptr<base::ListValue>(new base::ListValue());
+  switch (state)
+  {
+  case shell_integration::STATE_PROCESSING:
+    return;
+  case shell_integration::STATE_NOT_DEFAULT:
+    results_->AppendString("not default");
+    break;
+  case shell_integration::STATE_IS_DEFAULT:
+    results_->AppendString("default");
+    break;
+  case shell_integration::STATE_UNKNOWN:
+  default:
+    results_->AppendString("unknown");
+  }
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  SendResponse(true);
+}
+
+bool NwAppSetDefaultBrowserFunction::RunAsync() {
+  scoped_refptr<shell_integration::DefaultBrowserWorker> browserWorker(
+    new shell_integration::DefaultBrowserWorker(
+      new DefaultBrowserNwHandler(
+        base::Bind(&NwAppSetDefaultBrowserFunction::OnCallback, this)), true));
+  browserWorker->StartSetAsDefault();
+  return true;
+}
+
+void NwAppSetDefaultBrowserFunction::OnCallback(
+  shell_integration::DefaultWebClientUIState state) {
+  results_ = scoped_ptr<base::ListValue>(new base::ListValue());
+  switch (state)
+  {
+  case shell_integration::STATE_PROCESSING:
+    return;
+  case shell_integration::STATE_NOT_DEFAULT:
+    results_->AppendString("not default");
+    break;
+  case shell_integration::STATE_IS_DEFAULT:
+    results_->AppendString("default");
+    break;
+  case shell_integration::STATE_UNKNOWN:
+  default:
+    results_->AppendString("unknown");
+  }
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  SendResponse(true);
+}
 
 } // namespace extensions
