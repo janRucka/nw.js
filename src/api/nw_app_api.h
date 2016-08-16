@@ -116,6 +116,9 @@ protected:
   // ExtensionFunction:
   bool RunAsync() override;
   DECLARE_EXTENSION_FUNCTION("nw.App.isDefaultBrowser", UNKNOWN)
+
+private:
+  bool IsDefaultBrowserInRegistry();
 };
 
 class NwAppSetDefaultBrowserFunction : public AsyncExtensionFunction {
@@ -129,6 +132,9 @@ protected:
   // ExtensionFunction:
   bool RunAsync() override;
   DECLARE_EXTENSION_FUNCTION("nw.App.setDefaultBrowser", UNKNOWN)
+
+private:
+  bool SetDefaultBrowserViaRegistry();
 };
 
 } // namespace extensions
