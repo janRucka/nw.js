@@ -26,9 +26,9 @@ Each package must provide all the following fields in its package descriptor fil
 
 ### main
 
-* `{String}` which page should be opened when NW.js starts.
+* `{String}` which HTML page should be opened or which JavaScript file should be executed when NW.js starts.
 
-You can specify a URL here. You can also specify just a filename (such as `index.html`) or a path (relative to the directory where your `package.json` resides).
+You can specify a URL here. You can also specify just a filename (such as `index.html` or `script.js`) or a path (relative to the directory where your `package.json` resides).
 
 ### name
 
@@ -47,6 +47,10 @@ Following fields control which features NW.js should provide and how NW.js shoul
 ### node-main
 
 * `{String}` Specify the path to a node.js script file. And it will be executed on startup in Node context before the first DOM window load.
+
+### domain
+
+* `{String}` Specify the host in the chrome-extension:// protocol URL used for the application. The web engine will share the same cookies between your application and the website under the same domain.
 
 ### single-instance
 

@@ -54,6 +54,8 @@ using nw::BrowserViewLayout;
 #include "content/nw/src/nw_content_mac.h"
 #endif
 
+#include "chrome/browser/ui/webui/print_preview/print_preview_handler.h"
+
 using content::RenderWidgetHost;
 using content::RenderWidgetHostView;
 using content::WebContents;
@@ -351,7 +353,7 @@ NwCurrentWindowInternalSetMenuFunction::NwCurrentWindowInternalSetMenuFunction()
 NwCurrentWindowInternalSetMenuFunction::~NwCurrentWindowInternalSetMenuFunction() {
 }
 
-bool NwCurrentWindowInternalSetMenuFunction::RunAsync() {
+bool NwCurrentWindowInternalSetMenuFunction::RunNWSync(base::ListValue* response, std::string* error) {
   int id = 0;
   EXTENSION_FUNCTION_VALIDATE(args_->GetInteger(0, &id));
   AppWindow* window = getAppWindow(this);
@@ -364,7 +366,7 @@ bool NwCurrentWindowInternalSetMenuFunction::RunAsync() {
 
   window->menu_ = menu;
 #if defined(OS_MACOSX)
-  NWChangeAppMenu(menu);
+  response->Append(NWChangeAppMenu(menu).release());
 #endif
 
 #if defined(OS_LINUX) || defined(OS_WIN)
@@ -379,6 +381,7 @@ bool NwCurrentWindowInternalSetMenuFunction::RunAsync() {
   native_app_window_views->layout_();
   native_app_window_views->SchedulePaint();
   menu->UpdateKeys( native_app_window_views->widget()->GetFocusManager() );
+  response->Append(new base::ListValue());
 #endif
   return true;
 }
@@ -628,6 +631,45 @@ bool NwCurrentWindowInternalSetTitleInternalFunction::RunNWSync(base::ListValue*
   AppWindow* window = getAppWindow(this);
   window->set_title_override(title);
   window->GetBaseWindow()->UpdateWindowTitle();
+  return true;
+}
+
+bool NwCurrentWindowInternalGetPrintersFunction::RunAsync() {
+  base::ListValue* results = new base::ListValue;
+  content::BrowserThread::PostTaskAndReply(
+      content::BrowserThread::FILE, FROM_HERE,
+      base::Bind(&chrome::EnumeratePrintersOnFileThread,
+                 base::Unretained(results)),
+      base::Bind(&NwCurrentWindowInternalGetPrintersFunction::OnGetPrinterList,
+                 this,
+                 base::Unretained(results)));
+  return true;
+}
+
+void NwCurrentWindowInternalGetPrintersFunction::OnGetPrinterList(base::ListValue* results) {
+  SetResult(results);
+  SendResponse(true);
+}
+
+bool NwCurrentWindowInternalSetPrintSettingsInternalFunction::RunNWSync(base::ListValue* response, std::string* error) {
+  EXTENSION_FUNCTION_VALIDATE(args_);
+
+  if (!args_->GetSize())
+    return false;
+  base::Value* spec = NULL;
+  EXTENSION_FUNCTION_VALIDATE(args_->Get(0, &spec) && spec);
+  if (!spec->IsType(base::Value::TYPE_DICTIONARY))
+    return false;
+  const base::DictionaryValue* dict = static_cast<const base::DictionaryValue*>(spec);
+  bool auto_print;
+  std::string printer_name, pdf_path;
+  if (dict->GetBoolean("autoprint", &auto_print))
+    chrome::NWPrintSetCustomPrinting(auto_print);
+  if (dict->GetString("printer", &printer_name))
+    chrome::NWPrintSetDefaultPrinter(printer_name);
+  if (dict->GetString("pdf_path", &pdf_path))
+    chrome::NWPrintSetPDFPath(base::FilePath::FromUTF8Unsafe(pdf_path));
+  chrome::NWPrintSetOptions(dict);
   return true;
 }
 

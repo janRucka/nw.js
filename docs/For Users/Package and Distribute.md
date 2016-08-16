@@ -7,13 +7,12 @@ This document guides you how to package and distribute NW.js based app.
 
 ## Quick Start
 
-You can use [`nw-builder`](https://github.com/nwjs/nw-builder) to quickly generate a package for you.
+You can use following tools to automatically package your NW.js based app for distribution.
 
-1. [Prepare your app](#prepare-your-app) as below.
-2. Install `nw-builder` with `npm install -g nw-builder`
-3. Package your app with `nwbuild -p linux64 /path/to/your/app`
+* [nwjs-builder](https://github.com/evshiron/nwjs-builder)
+* [nw-builder](https://github.com/nwjs/nw-builder)
 
-Your app can be found in `./build` folder.
+Or your can build your app manually with the instructions below.
 
 ## Prepare Your App
 
@@ -85,11 +84,11 @@ On Linux, you need to create proper [`.desktop` file](https://wiki.archlinux.org
 
 To create a self-extractable installer script, you can use scripts like [`shar`](https://en.wikipedia.org/wiki/Shar) or [`makeself`](http://stephanepeter.com/makeself/).
 
-To distribute your app through the package management sysmtem, like `apt`, `yum`, `pacman` etc, please follow their official documents to create the packages.
+To distribute your app through the package management system, like `apt`, `yum`, `pacman` etc, please follow their official documents to create the packages.
 
 ### Mac OS X
 
-On Mac OS X, you need to modify following files to have your own icon and boundle id:
+On Mac OS X, you need to modify following files to have your own icon and bundle id:
 
 * `Contents/Resources/nw.icns`: icon of your app. `nw.icns` is in [Apple Icon Image Format](https://en.wikipedia.org/wiki/Apple_Icon_Image_format). You can convert your icon in PNG/JPEG format into ICNS by using tools like [Image2Icon](http://www.img2icnsapp.com/).
 * `Contents/Info.plist`: the apple package description file. You can view [Implementing Cocoa's Standard About Panel](http://cocoadevcentral.com/articles/000071.php) on how this file will influence your app and what fields you should modify.

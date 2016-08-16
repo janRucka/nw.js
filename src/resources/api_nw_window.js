@@ -158,6 +158,12 @@ nw_internal.registerCustomHook(function(bindingsAPI) {
   apiFunctions.setHandleRequest('getWinParamInternal', function() {
     return sendRequest.sendRequestSync('nw.currentWindowInternal.getWinParamInternal', arguments, this.definition.parameters, {})[0];
   });
+  apiFunctions.setHandleRequest('setPrintSettingsInternal', function() {
+    return sendRequest.sendRequestSync('nw.currentWindowInternal.setPrintSettingsInternal', arguments, this.definition.parameters, {})[0];
+  });
+  apiFunctions.setHandleRequest('setMenu', function() {
+    return sendRequest.sendRequestSync('nw.currentWindowInternal.setMenu', arguments, this.definition.parameters, {})[0];
+  });
 });
 
 nw_binding.registerCustomHook(function(bindingsAPI) {
@@ -222,69 +228,73 @@ nw_binding.registerCustomHook(function(bindingsAPI) {
       if (typeof record === 'undefined') {
         nwNatives.callInWindow(bgPage, "__nw_record_event", this, event, callback, false);
       }
+
+      // Wrap callback to bind to `self`.
+      // If `cb` is given, use `cb` instead of original `callback`.
+      function wrap(cb) {
+        var fn = (cb || callback).bind(self);
+        fn.listener = callback;
+        return fn;
+      }
+
       if (event === 'close') {
-        this.onClose.addListener(callback, {instanceId: currentWidgetRoutingID});
+        this.onClose.addListener(wrap(), {instanceId: currentWidgetRoutingID});
         return this;
       }
       switch (event) {
       case 'focus':
-        this.appWindow.contentWindow.onfocus = callback;
+        this.appWindow.contentWindow.onfocus = wrap();
         break;
       case 'blur':
-        this.appWindow.contentWindow.onblur = callback;
+        this.appWindow.contentWindow.onblur = wrap();
         break;
       case 'loaded':
-        function g(status) {
+        var g = wrap(function(status) {
           if (status == 'loaded')
-            callback();
-        }
-        g.listener = callback;
+            callback.call(self);
+        });
         this.LoadingStateChanged.addListener(g);
         break;
       case 'new-win-policy':
-        function h(frame, url, policy) {
+        var h = wrap(function(frame, url, policy) {
           policy.ignore         =  function () { this.val = 'ignore'; };
           policy.forceCurrent   =  function () { this.val = 'current'; };
           policy.forceDownload  =  function () { this.val = 'download'; };
           policy.forceNewWindow =  function () { this.val = 'new-window'; };
           policy.forceNewPopup  =  function () { this.val = 'new-popup'; };
           policy.setNewWindowManifest = function (m) { this.manifest = m; };
-          callback(frame, url, policy);
-        }
-        h.listener = callback;
+          callback.call(self, frame, url, policy);
+        });
         this.onNewWinPolicy.addListener(h);
         break;
       case 'navigation':
-        function j(frame, url, policy, context) {
+        var j = wrap(function(frame, url, policy, context) {
           policy.ignore         =  function () { this.val = 'ignore'; };
-          callback(frame, url, policy, context);
-        }
-        j.listener = callback;
+          callback.call(self, frame, url, policy, context);
+        });
         this.onNavigation.addListener(j);
         break;
       case 'move':
-        function cb() {
-          callback(self.x, self.y);
-        }
-        cb.listener = callback;
-        this.appWindow.onMoved.addListener(cb);
+        var k = wrap(function() {
+          callback.call(self, self.x, self.y);
+        });
+        this.appWindow.onMoved.addListener(k);
         return this; //return early
         break;
       case 'resize':
-        function cb2() {
-          callback(self.width, self.height);
-        }
-        cb2.listener = callback;
-        this.appWindow.onResized.addListener(cb2);
+        var l = wrap(function() {
+          callback.call(self, self.width, self.height);
+        });
+        this.appWindow.onResized.addListener(l);
         return this; //return early
         break;
       }
       if (appWinEventsMap.hasOwnProperty(event)) {
-        this.appWindow[appWinEventsMap[event]].addListener(callback);
+        this.appWindow[appWinEventsMap[event]].addListener(wrap());
         return this;
       }
       if (nwWinEventsMap.hasOwnProperty(event)) {
-        this[nwWinEventsMap[event]].addListener(callback);
+        this[nwWinEventsMap[event]].addListener(wrap());
         return this;
       }
       return this;
@@ -292,12 +302,20 @@ nw_binding.registerCustomHook(function(bindingsAPI) {
     NWWindow.prototype.removeListener = function (event, callback) {
       nwNatives.callInWindow(bgPage, "__nw_removeOuterEventCB", this, event, callback);
       if (appWinEventsMap.hasOwnProperty(event)) {
-        this.appWindow[appWinEventsMap[event]].removeListener(callback);
-        return this;
+        for (let l of this.appWindow[appWinEventsMap[event]].getListeners()) {
+          if (l.callback.listener && l.callback.listener === callback) {
+            this.appWindow[appWinEventsMap[event]].removeListener(l.callback);
+            return this;
+          }
+        }
       }
       if (nwWinEventsMap.hasOwnProperty(event)) {
-        this[nwWinEventsMap[event]].removeListener(callback);
-        return this;
+        for (let l of this[nwWinEventsMap[event]].getListeners()) {
+          if (l.callback.listener && l.callback.listener === callback) {
+            this[nwWinEventsMap[event]].removeListener(l.callback);
+            return this;
+          }
+        }
       }
       if (nwWrapEventsMap.hasOwnProperty(event)) {
         for (let l of this[nwWrapEventsMap[event]].getListeners()) {
@@ -309,11 +327,11 @@ nw_binding.registerCustomHook(function(bindingsAPI) {
       }
       switch (event) {
       case 'focus':
-        if (this.appWindow.contentWindow.onfocus === callback)
+        if (this.appWindow.contentWindow.onfocus && this.appWindow.contentWindow.onfocus.listener === callback)
           this.appWindow.contentWindow.onfocus = null;
         break;
       case 'blur':
-        if (this.appWindow.contentWindow.onblur === callback)
+        if (this.appWindow.contentWindow.onblur && this.appWindow.contentWindow.onblur.listener === callback)
           this.appWindow.contentWindow.onblur = null;
         break;
       }
@@ -323,38 +341,44 @@ nw_binding.registerCustomHook(function(bindingsAPI) {
     NWWindow.prototype.removeAllListeners = function (event) {
       nwNatives.callInWindow(bgPage, "__nw_remove_all_listeners", this, event);
       if (appWinEventsMap.hasOwnProperty(event)) {
-        for (let l of
-             this.appWindow[appWinEventsMap[event]].getListeners()) {
+        for (let l of this.appWindow[appWinEventsMap[event]].getListeners()) {
           this.appWindow[appWinEventsMap[event]].removeListener(l.callback);
         }
         return this;
       }
       if (nwWinEventsMap.hasOwnProperty(event)) {
-        for (let l of
-             this[nwWinEventsMap[event]].getListeners()) {
+        for (let l of this[nwWinEventsMap[event]].getListeners()) {
           this[nwWinEventsMap[event]].removeListener(l.callback);
         }
         return this;
       }
       if (nwWrapEventsMap.hasOwnProperty(event)) {
         for (let l of this[nwWrapEventsMap[event]].getListeners()) {
-            this[nwWrapEventsMap[event]].removeListener(l.callback);
-            return this;
+          this[nwWrapEventsMap[event]].removeListener(l.callback);
         }
+        return this;
       }
       switch (event) {
       case 'focus':
-          this.appWindow.contentWindow.onfocus = null;
+        this.appWindow.contentWindow.onfocus = null;
         break;
       case 'blur':
-          this.appWindow.contentWindow.onblur = null;
+        this.appWindow.contentWindow.onblur = null;
         break;
       }
       return this;
     };
 
     NWWindow.prototype.showDevTools = function(frm, callback) {
-      nwNatives.setDevToolsJail(frm);
+      var id = '';
+      if (typeof frm === 'string')
+        id = frm;
+      var f = null;
+      if (id)
+        f = this.appWindow.contentWindow.getElementById(id);
+      else
+        f = frm || null;
+      nwNatives.setDevToolsJail(f);
       currentNWWindowInternal.showDevToolsInternal(callback);
     };
     NWWindow.prototype.capturePage = function (callback, options) {
@@ -386,10 +410,10 @@ nw_binding.registerCustomHook(function(bindingsAPI) {
       currentNWWindowInternal.reloadIgnoringCache();
     };
     NWWindow.prototype.eval = function (frame, script) {
-      nwNatives.evalScript(frame, script);
+      return nwNatives.evalScript(frame, script);
     };
     NWWindow.prototype.evalNWBin = function (frame, path) {
-      nwNatives.evalNWBin(frame, path);
+      return nwNatives.evalNWBin(frame, path);
     };
     NWWindow.prototype.show = function () {
       this.appWindow.show();
@@ -478,6 +502,16 @@ nw_binding.registerCustomHook(function(bindingsAPI) {
     };
     NWWindow.prototype.cookies = chrome.cookies;
 
+    NWWindow.prototype.print = function(option) {
+      var _option = JSON.parse(JSON.stringify(option));
+      _option["autoprint"] = true;
+      if (option.pdf_path)
+        _option["printer"] = "Save as PDF";
+      currentNWWindowInternal.setPrintSettingsInternal(_option);
+      window.print();
+      // autoprint will be set to false in print_preview_handler.cc after printing is done
+      // window.print will return immediately for PDF window #5002
+    };
     Object.defineProperty(NWWindow.prototype, 'x', {
       get: function() {
         return this.appWindow.outerBounds.left;
@@ -559,6 +593,7 @@ nw_binding.registerCustomHook(function(bindingsAPI) {
       },
       set: function(menu) {
         if(!menu) {
+          privates(this).menu = null;
           currentNWWindowInternal.clearMenu();
           return;
         }
@@ -566,7 +601,17 @@ nw_binding.registerCustomHook(function(bindingsAPI) {
           throw new TypeError('Only menu of type "menubar" can be used as this.window menu');
 
         privates(this).menu =  menu;
-        currentNWWindowInternal.setMenu(menu.id);
+        var menuPatch = currentNWWindowInternal.setMenu(menu.id);
+        if (menuPatch.length) {
+          menuPatch.forEach((patch)=>{
+            let menuIndex = patch.menu;
+            let itemIndex = patch.index;
+            let menuToPatch = menu.items[menuIndex];
+            if (menuToPatch && menuToPatch.submenu) {
+              menuToPatch.submenu.insert(new nw.MenuItem(patch.option), itemIndex);
+            }
+          });
+        }
       }
     });
     Object.defineProperty(NWWindow.prototype, 'window', {

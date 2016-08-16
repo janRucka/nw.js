@@ -69,6 +69,9 @@
 
 #include "net/cert/x509_certificate.h"
 
+#include "sql/connection.h"
+#include "sql/meta_table.h"
+#include "sql/transaction.h"
 #include "storage/common/database/database_identifier.h"
 
 #include "third_party/WebKit/public/web/WebDocument.h"
@@ -322,15 +325,21 @@ int MainPartsPreCreateThreadsHook() {
     }
 
     base::FilePath user_data_dir;
-    std::string name;
+    std::string name, domain;
     package->root()->GetString("name", &name);
+    package->root()->GetString("domain", &domain);
     if (!name.empty() && PathService::Get(chrome::DIR_USER_DATA, &user_data_dir)) {
+#if defined(OS_WIN)
+      base::FilePath old_dom_storage_dir = user_data_dir.DirName()
+        .Append(FILE_PATH_LITERAL("Local Storage"));
+#else
       base::FilePath old_dom_storage_dir = user_data_dir
         .Append(FILE_PATH_LITERAL("Local Storage"));
+#endif
       base::FileEnumerator enum0(old_dom_storage_dir, false, base::FileEnumerator::FILES, FILE_PATH_LITERAL("*_0.localstorage"));
       base::FilePath old_dom_storage = enum0.Next();
       if (!old_dom_storage.empty()) {
-        std::string id = crx_file::id_util::GenerateId(name);
+        std::string id = domain.empty() ? crx_file::id_util::GenerateId(name) : domain;
         GURL origin("chrome-extension://" + id + "/");
         base::FilePath new_storage_dir = user_data_dir.Append(FILE_PATH_LITERAL("Default"))
           .Append(FILE_PATH_LITERAL("Local Storage"));
@@ -340,24 +349,66 @@ int MainPartsPreCreateThreadsHook() {
           .Append(content::DOMStorageArea::DatabaseFileNameFromOrigin(origin));
         base::FilePath new_dom_journal = new_dom_storage.ReplaceExtension(FILE_PATH_LITERAL("localstorage-journal"));
         base::FilePath old_dom_journal = old_dom_storage.ReplaceExtension(FILE_PATH_LITERAL("localstorage-journal"));
-        base::Move(old_dom_journal, new_dom_journal);
-        base::Move(old_dom_storage, new_dom_storage);
-        LOG_IF(INFO, true) << "Migrate DOM storage from " << old_dom_storage.AsUTF8Unsafe() << " to " << new_dom_storage.AsUTF8Unsafe();
+        if (!base::PathExists(new_dom_journal) && !base::PathExists(new_dom_storage)) {
+          base::Move(old_dom_journal, new_dom_journal);
+          base::Move(old_dom_storage, new_dom_storage);
+          LOG_IF(INFO, true) << "Migrate DOM storage from " << old_dom_storage.AsUTF8Unsafe() << " to " << new_dom_storage.AsUTF8Unsafe();
+        }
       }
+#if defined(OS_WIN)
+      base::FilePath old_websqldir = user_data_dir.DirName()
+        .Append(FILE_PATH_LITERAL("databases"));
+#else
+      base::FilePath old_websqldir = user_data_dir
+        .Append(FILE_PATH_LITERAL("databases"));
+#endif
+      base::FileEnumerator enum1(old_websqldir, false, base::FileEnumerator::DIRECTORIES, FILE_PATH_LITERAL("app_*"));
+      base::FilePath app_websql_dir = enum1.Next();
+      std::string old_id("file__0");
+      if (!app_websql_dir.empty())
+        old_id = app_websql_dir.BaseName().AsUTF8Unsafe();
+      if (base::PathExists(old_websqldir)) {
+        std::string id = domain.empty() ? crx_file::id_util::GenerateId(name) : domain;
+        GURL origin("chrome-extension://" + id + "/");
+        base::FilePath new_websql_dir = user_data_dir.Append(FILE_PATH_LITERAL("Default"))
+          .Append(FILE_PATH_LITERAL("databases"))
+          .AppendASCII(storage::GetIdentifierFromOrigin(origin));
+        if (!base::PathExists(new_websql_dir.DirName())) {
+          base::CreateDirectory(new_websql_dir.DirName());
+          base::CopyDirectory(old_websqldir, new_websql_dir.DirName().DirName(), true);
+          base::Move(new_websql_dir.DirName().Append(base::FilePath::FromUTF8Unsafe(old_id)), new_websql_dir);
+          base::FilePath metadb_path = new_websql_dir.DirName().Append(FILE_PATH_LITERAL("Databases.db"));
+          sql::Connection metadb;
+          if (metadb.Open(metadb_path) && sql::MetaTable::DoesTableExist(&metadb)) {
+            std::string stmt = "UPDATE Databases SET origin='" + storage::GetIdentifierFromOrigin(origin) + "' WHERE origin='" + old_id + "'";
+            if (!metadb.Execute(stmt.c_str()))
+              LOG_IF(INFO, true) << "Fail to execute migrate SQL.";
+          }
+          LOG_IF(INFO, true) << "Migrated WebSql DB from " << old_websqldir.AsUTF8Unsafe() << " to " << new_websql_dir.AsUTF8Unsafe();
+        }
+      }
+#if defined(OS_WIN)
+      base::FilePath old_indexeddb = user_data_dir.DirName()
+        .Append(FILE_PATH_LITERAL("IndexedDB"))
+        .Append(FILE_PATH_LITERAL("file__0.indexeddb.leveldb"));
+#else
       base::FilePath old_indexeddb = user_data_dir
         .Append(FILE_PATH_LITERAL("IndexedDB"))
         .Append(FILE_PATH_LITERAL("file__0.indexeddb.leveldb"));
+#endif
       if (base::PathExists(old_indexeddb)) {
-        std::string id = crx_file::id_util::GenerateId(name);
+        std::string id = domain.empty() ? crx_file::id_util::GenerateId(name) : domain;
         GURL origin("chrome-extension://" + id + "/");
         base::FilePath new_indexeddb_dir = user_data_dir.Append(FILE_PATH_LITERAL("Default"))
           .Append(FILE_PATH_LITERAL("IndexedDB"))
           .AppendASCII(storage::GetIdentifierFromOrigin(origin))
           .AddExtension(FILE_PATH_LITERAL(".indexeddb.leveldb"));
-        base::CreateDirectory(new_indexeddb_dir.DirName());
-        base::CopyDirectory(old_indexeddb, new_indexeddb_dir.DirName(), true);
-        base::Move(new_indexeddb_dir.DirName().Append(FILE_PATH_LITERAL("file__0.indexeddb.leveldb")), new_indexeddb_dir);
-        LOG_IF(INFO, true) << "Migrated IndexedDB from " << old_indexeddb.AsUTF8Unsafe() << " to " << new_indexeddb_dir.AsUTF8Unsafe();
+        if (!base::PathExists(new_indexeddb_dir.DirName())) {
+          base::CreateDirectory(new_indexeddb_dir.DirName());
+          base::CopyDirectory(old_indexeddb, new_indexeddb_dir.DirName(), true);
+          base::Move(new_indexeddb_dir.DirName().Append(FILE_PATH_LITERAL("file__0.indexeddb.leveldb")), new_indexeddb_dir);
+          LOG_IF(INFO, true) << "Migrated IndexedDB from " << old_indexeddb.AsUTF8Unsafe() << " to " << new_indexeddb_dir.AsUTF8Unsafe();
+        }
       }
     }
 
@@ -369,42 +420,51 @@ void MainPartsPostDestroyThreadsHook() {
   ReleaseNWPackage();
 }
 
-void DocumentFinishHook(blink::WebFrame* frame,
-                         const extensions::Extension* extension,
-                         const GURL& effective_document_url) {
-  v8::Isolate* isolate = v8::Isolate::GetCurrent();
-  v8::HandleScope hscope(isolate);
-  std::string path = effective_document_url.path();
-  v8::Local<v8::Context> v8_context = frame->mainWorldScriptContext();
+void TryInjectStartScript(blink::WebLocalFrame* frame, const Extension* extension, bool start) {
   RenderViewImpl* rv = RenderViewImpl::FromWebView(frame->view());
   if (!rv)
     return;
-  if (!extension) {
-    extension = RendererExtensionRegistry::Get()->GetByID(g_extension_id);
-    if (!extension)
-      return;
-  }
-  if (!(extension->is_extension() || extension->is_platform_app()))
-    return;
-  std::string root_path = extension->path().AsUTF8Unsafe();
-  base::FilePath root(extension->path());
-  std::string js_fn = rv->renderer_preferences().nw_inject_js_doc_end;
+
+  std::string js_fn = start ? rv->renderer_preferences().nw_inject_js_doc_start :
+                              rv->renderer_preferences().nw_inject_js_doc_end;
   if (js_fn.empty())
     return;
-  base::FilePath js_file = root.AppendASCII(js_fn);
+  base::FilePath fpath = base::FilePath::FromUTF8Unsafe(js_fn);
+  if (!fpath.IsAbsolute()) {
+    const Extension* extension = nullptr;
+    if (!extension) {
+      extension = RendererExtensionRegistry::Get()->GetByID(g_extension_id);
+      if (!extension)
+        return;
+    }
+    if (!(extension->is_extension() || extension->is_platform_app()))
+      return;
+    base::FilePath root(extension->path());
+    fpath = root.AppendASCII(js_fn);
+  }
+  v8::Local<v8::Context> v8_context = frame->mainWorldScriptContext();
   std::string content;
-  if (!base::ReadFileToString(js_file, &content)) {
+  if (!base::ReadFileToString(fpath, &content)) {
     //LOG(WARNING) << "Failed to load js script file: " << js_file.value();
     return;
   }
   base::string16 jscript = base::UTF8ToUTF16(content);
-  {
+  if (!v8_context.IsEmpty()) {
     blink::WebScopedMicrotaskSuppression suppression;
     blink::ScriptForbiddenScope::AllowUserAgentScript script;
     v8::Context::Scope cscope(v8_context);
     // v8::Handle<v8::Value> result;
     frame->executeScriptAndReturnValue(WebScriptSource(jscript));
   }
+}
+
+void DocumentFinishHook(blink::WebLocalFrame* frame,
+                         const extensions::Extension* extension,
+                         const GURL& effective_document_url) {
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::HandleScope hscope(isolate);
+
+  TryInjectStartScript(frame, extension, false);
 }
 
 void DocumentHook2(bool start, content::RenderFrame* frame, Dispatcher* dispatcher) {
@@ -422,6 +482,8 @@ void DocumentHook2(bool start, content::RenderFrame* frame, Dispatcher* dispatch
       ->GetWebView()->mainFrame()->mainWorldScriptContext();
   ScriptContext* script_context =
       dispatcher->script_context_set().GetByV8Context(v8_context);
+  if (start)
+    TryInjectStartScript(web_frame, script_context ? script_context->extension() : nullptr, true);
   if (!script_context)
     return;
   std::vector<v8::Handle<v8::Value> > arguments;
@@ -484,23 +546,6 @@ void DocumentElementHook(blink::WebLocalFrame* frame,
   if (!v8_context.IsEmpty()) {
     blink::WebScopedMicrotaskSuppression suppression;
     v8::Context::Scope cscope(v8_context);
-    frame->executeScriptAndReturnValue(WebScriptSource(jscript));
-  }
-
-  std::string js_fn = rv->renderer_preferences().nw_inject_js_doc_start;
-  if (js_fn.empty())
-    return;
-  base::FilePath js_file = root.AppendASCII(js_fn);
-  std::string content;
-  if (!base::ReadFileToString(js_file, &content)) {
-    //LOG(WARNING) << "Failed to load js script file: " << js_file.value();
-    return;
-  }
-  jscript = base::UTF8ToUTF16(content);
-  if (!v8_context.IsEmpty()) {
-    blink::WebScopedMicrotaskSuppression suppression;
-    v8::Context::Scope cscope(v8_context);
-    // v8::Handle<v8::Value> result;
     frame->executeScriptAndReturnValue(WebScriptSource(jscript));
   }
 }
@@ -606,12 +651,11 @@ void ContextCreationHook(blink::WebLocalFrame* frame, ScriptContext* context) {
   }
   v8::Handle<v8::Object> nw = AsObjectOrEmpty(CreateNW(context, node_global, g_context));
 
-  v8::Local<v8::Array> symbols = v8::Array::New(isolate, 5);
+  v8::Local<v8::Array> symbols = v8::Array::New(isolate, 4);
   symbols->Set(0, v8::String::NewFromUtf8(isolate, "global"));
   symbols->Set(1, v8::String::NewFromUtf8(isolate, "process"));
   symbols->Set(2, v8::String::NewFromUtf8(isolate, "Buffer"));
-  symbols->Set(3, v8::String::NewFromUtf8(isolate, "root"));
-  symbols->Set(4, v8::String::NewFromUtf8(isolate, "require"));
+  symbols->Set(3, v8::String::NewFromUtf8(isolate, "require"));
 
   g_context->Enter();
   for (unsigned i = 0; i < symbols->Length(); ++i) {

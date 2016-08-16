@@ -46,6 +46,11 @@ class MenuBarButton : public views::MenuButton {
     return !tooltip->empty();
   }
 
+  void OnNativeThemeChanged(const ui::NativeTheme* theme) override {
+    views::MenuButton::OnNativeThemeChanged(theme);
+    SetEnabledTextColors(theme->GetSystemColor(ui::NativeTheme::kColorId_EnabledMenuItemForegroundColor));
+  }
+
  private:
 
   DISALLOW_COPY_AND_ASSIGN(MenuBarButton);
@@ -100,6 +105,7 @@ void MenuBarView::OnMenuButtonClicked(views::MenuButton* view,
     MenuBarController* controller = new MenuBarController(this, model_->GetSubmenuModelAt(button_index), NULL);
     controller->RunMenuAt(view, point);
   }
+  model_->ActivatedAt(button_index, event->flags());
 }
 
 void MenuBarView::ButtonPressed(views::Button* sender,
@@ -107,8 +113,11 @@ void MenuBarView::ButtonPressed(views::Button* sender,
 }
 
 void MenuBarView::OnNativeThemeChanged(const ui::NativeTheme* theme) {
-  set_background(views::Background::CreateSolidBackground(GetNativeTheme()->
+  // Use menu background color for menubar
+  set_background(views::Background::CreateSolidBackground(theme->
        GetSystemColor(ui::NativeTheme::kColorId_MenuBackgroundColor)));
+  // Force to repaint the menubar
+  SchedulePaint();
 }
 
 } //namespace nw
