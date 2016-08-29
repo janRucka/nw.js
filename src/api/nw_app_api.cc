@@ -1,17 +1,12 @@
 #include "content/nw/src/api/nw_app_api.h"
 
 #include "base/command_line.h"
-#include "base/path_service.h"
-#include "base/win/windows_version.h"
 #include "chrome/browser/browsing_data/browsing_data_appcache_helper.h"
 #include "chrome/browser/browsing_data/browsing_data_helper.h"
 #include "chrome/browser/browsing_data/browsing_data_remover_factory.h"
 #include "chrome/browser/devtools/devtools_window.h"
 #include "chrome/browser/extensions/devtools_util.h"
 #include "chrome/browser/extensions/extension_service.h"
-#include "chrome/installer/util/registry_entry.h"
-#include "chrome/installer/util/work_item.h"
-#include "chrome/installer/util/work_item_list.h"
 #include "content/nw/src/nw_base.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_process_host.h"
@@ -27,6 +22,14 @@
 #include "net/proxy/proxy_service.h"
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
+
+#if defined(OS_WIN)
+#include "base/path_service.h"
+#include "base/win/windows_version.h"
+#include "chrome/installer/util/registry_entry.h"
+#include "chrome/installer/util/work_item.h"
+#include "chrome/installer/util/work_item_list.h"
+#endif
 
 namespace {
 void SetProxyConfigCallback(
@@ -213,6 +216,7 @@ bool NwAppIsDefaultBrowserFunction::RunAsync() {
 }
 
 bool NwAppIsDefaultBrowserFunction::IsDefaultBrowserInRegistry() {
+#if defined(OS_WIN)
   if (base::win::GetVersion() > base::win::VERSION_WIN7)
     return false;
 
@@ -228,6 +232,8 @@ bool NwAppIsDefaultBrowserFunction::IsDefaultBrowserInRegistry() {
     return true;
   else
     return false;
+#endif
+  return false;
 }
 
 void NwAppIsDefaultBrowserFunction::OnCallback(
@@ -266,6 +272,7 @@ bool NwAppSetDefaultBrowserFunction::RunAsync() {
   return true;
 }
 
+#if defined(OS_WIN)
 bool AddToHKCURegistry(const ScopedVector<RegistryEntry>& registryItems)
 {
   HKEY key = HKEY_CURRENT_USER;
@@ -279,8 +286,10 @@ bool AddToHKCURegistry(const ScopedVector<RegistryEntry>& registryItems)
   }
   return true;
 }
+#endif
 
 bool NwAppSetDefaultBrowserFunction::SetDefaultBrowserViaRegistry() {
+#if defined(OS_WIN)
   if (base::win::GetVersion() > base::win::VERSION_WIN7)
     return false;
 
@@ -320,6 +329,8 @@ bool NwAppSetDefaultBrowserFunction::SetDefaultBrowserViaRegistry() {
   // file (*.htm, *.html, *.xhtml) association, it will probably fail, but we try anyway
   AddToHKCURegistry(registryItems);
   return true;
+#endif
+  return false;
 }
 
 void NwAppSetDefaultBrowserFunction::OnCallback(
