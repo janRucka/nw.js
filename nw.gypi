@@ -117,6 +117,8 @@
         'src/api/shell/shell.h',
         'src/api/tray/tray.cc',
         'src/api/tray/tray.h',
+        'src/nw_importer_bridge.cc',
+        'src/nw_importer_bridge.h',
         'src/nw_content.cc',
         'src/nw_content.h',
         'src/nw_custom_bindings.cc',

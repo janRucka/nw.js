@@ -7,6 +7,7 @@
 namespace nw.App {
   callback EventCallback = void();
   callback StringCallback = void(DOMString data);
+  callback ObjectsCallback = void(object[] data);
   interface Functions {
     // crash the renderer for testing
     [nocompile] static void crashRenderer();
@@ -29,6 +30,7 @@ namespace nw.App {
     static void crashBrowser();
     static void isDefaultBrowser(StringCallback callback);
     static void setDefaultBrowser(StringCallback callback);
+    static void getIEBookmarks(ObjectsCallback callback);
   };
   interface Events {
     static void onOpen(DOMString cmdline);
