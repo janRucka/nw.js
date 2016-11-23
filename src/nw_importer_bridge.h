@@ -4,7 +4,7 @@
 class NwImporterBridge : public ImporterBridge {
 public:
 
-  NwImporterBridge() {}
+  NwImporterBridge();
 
   void AddBookmarks(const std::vector<ImportedBookmarkEntry>& bookmarks,
     const base::string16& first_folder_name) override;
@@ -40,11 +40,11 @@ public:
 
   base::string16 GetLocalizedString(int message_id) override;
 
-  ~NwImporterBridge() override;
-
   const std::vector<ImportedBookmarkEntry>& GetBookmarks() const { return bookmarks_; } 
 
 private:
   std::vector<ImportedBookmarkEntry> bookmarks_;
   //favicon_base::FaviconUsageDataList favicons_;
+    
+  ~NwImporterBridge() override;
 };

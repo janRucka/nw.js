@@ -1,5 +1,7 @@
 #include "nw_importer_bridge.h"
 
+NwImporterBridge::NwImporterBridge() {}
+
 void NwImporterBridge::AddBookmarks(const std::vector<ImportedBookmarkEntry>& bookmark,
   const base::string16& first_folder_name) {
   bookmarks_ = bookmark;

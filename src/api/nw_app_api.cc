@@ -9,8 +9,6 @@
 #include "chrome/browser/devtools/devtools_window.h"
 #include "chrome/browser/extensions/devtools_util.h"
 #include "chrome/browser/extensions/extension_service.h"
-#include "chrome/installer/util/work_item.h"
-#include "chrome/installer/util/work_item_list.h"
 #include "content/nw/src/nw_base.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
@@ -32,6 +30,8 @@
 #include "base/win/windows_version.h"
 #include "chrome/common/importer/imported_bookmark_entry.h"
 #include "chrome/installer/util/registry_entry.h"
+#include "chrome/installer/util/work_item.h"
+#include "chrome/installer/util/work_item_list.h"
 #include "chrome/utility/importer/ie_importer_win.h"
 #endif
 
@@ -193,6 +193,7 @@ bool NwAppCrashBrowserFunction::RunAsync() {
   return true;
 }
 
+#if defined(OS_WIN)
 static base::ListValue *ListValue_FromStringArray(const std::vector<std::wstring> &arr) {
   base::ListValue *v = new base::ListValue();
   for (std::vector<std::wstring>::const_iterator iter = arr.begin(); iter != arr.end(); ++iter) {
@@ -200,6 +201,7 @@ static base::ListValue *ListValue_FromStringArray(const std::vector<std::wstring
   }
   return v;
 }
+#endif
 
 bool NwAppGetIEBookmarksFunction::RunAsync() {
 #if defined(OS_WIN)
