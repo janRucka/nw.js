@@ -5,6 +5,7 @@
 
 #include "base/run_loop.h"
 #include "chrome/browser/browsing_data/browsing_data_remover.h"
+#include "chrome/browser/shell_integration.h"
 #include "extensions/browser/extension_function.h"
 
 namespace extensions {
@@ -127,6 +128,38 @@ protected:
   // ExtensionFunction:
   bool RunAsync() override;
   DECLARE_EXTENSION_FUNCTION("nw.App.getIEBookmarks", UNKNOWN)
+};
+
+class NwAppIsDefaultBrowserFunction : public AsyncExtensionFunction {
+public:
+  NwAppIsDefaultBrowserFunction() {}
+  void OnCallback(shell_integration::DefaultWebClientState state);
+
+protected:
+  ~NwAppIsDefaultBrowserFunction() override {}
+
+  // ExtensionFunction:
+  bool RunAsync() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.isDefaultBrowser", UNKNOWN)
+
+private:
+  bool IsDefaultBrowserInRegistry();
+};
+
+class NwAppSetDefaultBrowserFunction : public AsyncExtensionFunction {
+public:
+  NwAppSetDefaultBrowserFunction() {}
+  void OnCallback(shell_integration::DefaultWebClientState state);
+
+protected:
+  ~NwAppSetDefaultBrowserFunction() override {}
+
+  // ExtensionFunction:
+  bool RunAsync() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.setDefaultBrowser", UNKNOWN)
+
+private:
+  bool SetDefaultBrowserViaRegistry();
 };
 
 } // namespace extensions
