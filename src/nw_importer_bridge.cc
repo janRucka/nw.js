@@ -40,4 +40,6 @@ base::string16 NwImporterBridge::GetLocalizedString(int message_id) {
   return base::string16();
 }
 
+NwImporterBridge::NwImporterBridge() {}
+
 NwImporterBridge::~NwImporterBridge() {}
