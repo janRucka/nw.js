@@ -1,3 +1,27 @@
+0.19.5 / 01-10-2017
+===================
+- Update Node.js to [7.4.0](https://nodejs.org/en/blog/release/v7.4.0/)
+- Node.js integration is supported in webview [(#4780)](https://github.com/nwjs/nw.js/issues/4780)
+- Fix: Crash when accessing HTMLElement properties from node's vm module [(#4018)](https://github.com/nwjs/nw.js/issues/4018)
+- Fix: Linux wrong file permissions [(#5611)](https://github.com/nwjs/nw.js/issues/5611)
+- [docs] Node.js support in webview
+
+0.19.4 / 12-30-2016
+===================
+- Fix: crash in ServiceWorker in webview
+
+0.19.3 / 12-21-2016
+===================
+- Update Node.js to [7.3.0](https://nodejs.org/en/blog/release/v7.3.0/)
+- Fix: Hang when https website with cert. error is loaded [(#5544)](https://github.com/nwjs/nw.js/issues/5544)
+- Fix: Webview freezes on almost any invalid certificate [(#5564)](https://github.com/nwjs/nw.js/issues/5564)
+- Fix: Flash needs manual intervention and control-click not working [(#5548)](https://github.com/nwjs/nw.js/issues/5548)
+- Fix: permission warning and crash of chrome identity app [(#5552)](https://github.com/nwjs/nw.js/issues/5552)
+- Fix: popup menu in background page crashes nw [(#5513)](https://github.com/nwjs/nw.js/issues/5513)
+- Fix: nw.Window.isTransparent should be boolean [(#5561)](https://github.com/nwjs/nw.js/issues/5561)
+- Fix: [test] race condition in chromedriver
+- [docs] Add a recent tutorial
+
 0.19.2 / 12-12-2016
 ===================
 - Update Chromium to [55.0.2883.87](https://googlechromereleases.blogspot.com/2016/12/stable-channel-update-for-desktop_9.html)

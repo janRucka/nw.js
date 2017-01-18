@@ -311,6 +311,8 @@ Print the web contents in the window without the need for user's interaction. `o
 `marginsCustom` example: `"marginsCustom":{"marginBottom":54,"marginLeft":70,"marginRight":28,"marginTop":32}`  
 `mediaSize` example: `'mediaSize':{'name': 'CUSTOM', 'width_microns': 279400, 'height_microns': 215900, 'custom_display_name':'Letter', 'is_default': true}`
 
+*NOTE: If no options are being passed, `win.print({})` is what should be called.*
+
 ## win.setMaximumSize(width, height)
 
 * `width` `{Integer}` the maximum width of the window
@@ -480,7 +482,7 @@ Emitted when the window is fully loaded, this event behaves the same with `windo
 Emitted when the document object in this window or a child iframe is available, after all files are loaded, but before DOM is constructed or any script is run.
 It will not be fired on the new window being created with nw.Window.open(): the callback of that function will be fired at the same point of this event.
 
-See `inject-js-start` in [Manifest-format](Manifest Format.md#inject-js-start).
+See `inject_js_start` in [Manifest-format](Manifest Format.md#inject_js_start).
 
 ## Event: document-end(frame)
 
@@ -488,7 +490,7 @@ See `inject-js-start` in [Manifest-format](Manifest Format.md#inject-js-start).
  
 Emitted when the document object in this window or a child iframe is unloaded, but before the `onunload` event is emitted.
 
-See `inject-js-end` in [[Manifest-format]]
+See `inject_js_end` in [Manifest-format](Manifest Format.md#inject_js_end)
 
 ## Event: focus
 

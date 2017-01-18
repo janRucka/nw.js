@@ -3,7 +3,6 @@
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nwjs/nw.js?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  
 Official site: http://nwjs.io  
 Official documentation: http://docs.nwjs.io/  
-[Announcement](https://groups.google.com/d/msg/nwjs-general/V1FhvfaFIzQ/720xKVd0jNkJ)  
 ## Introduction
 
 NW.js is an app runtime based on `Chromium` and `node.js`. You can 
@@ -13,6 +12,7 @@ native applications with all Web technologies.
 
 It was created in the Intel Open Source Technology Center.
 
+[Building a Cross-platform Desktop App with NW.js](https://www.sitepoint.com/cross-platform-desktop-app-nw-js/)     
 [Creating Desktop Applications With node-webkit](https://strongloop.com/strongblog/creating-desktop-applications-with-node-webkit/)     
 [WebApp to DesktopApp with node-webkit (slides)](http://oldgeeksguide.github.io/presentations/html5devconf2013/wtod.html)  
 [Essay on the history and internals of the project](http://yedingding.com/2014/08/01/node-webkit-intro-en.html)
@@ -26,11 +26,11 @@ It was created in the Intel Open Source Technology Center.
 * Available on Linux, Mac OS X and Windows
 
 ## Downloads
-* **v0.19.2:** (Dec 12, 2016, based off of Node.js v7.2.1, Chromium 55.0.2883.87): [release notes](https://nwjs.io/blog/v0.19.2/)  
+* **v0.19.5:** (Jan 10, 2017, based off of Node.js v7.4.0, Chromium 55.0.2883.87): [release notes](https://nwjs.io/blog/v0.19.5/)  
  **NOTE** You might want the **SDK build**. Please read the release notes.
- * Linux: [32bit](https://dl.nwjs.io/v0.19.2/nwjs-v0.19.2-linux-ia32.tar.gz) / [64bit](https://dl.nwjs.io/v0.19.2/nwjs-v0.19.2-linux-x64.tar.gz)
- * Windows: [32bit](https://dl.nwjs.io/v0.19.2/nwjs-v0.19.2-win-ia32.zip) / [64bit](https://dl.nwjs.io/v0.19.2/nwjs-v0.19.2-win-x64.zip)
- * Mac 10.9+: [64bit](https://dl.nwjs.io/v0.19.2/nwjs-v0.19.2-osx-x64.zip)
+ * Linux: [32bit](https://dl.nwjs.io/v0.19.5/nwjs-v0.19.5-linux-ia32.tar.gz) / [64bit](https://dl.nwjs.io/v0.19.5/nwjs-v0.19.5-linux-x64.tar.gz)
+ * Windows: [32bit](https://dl.nwjs.io/v0.19.5/nwjs-v0.19.5-win-ia32.zip) / [64bit](https://dl.nwjs.io/v0.19.5/nwjs-v0.19.5-win-x64.zip)
+ * Mac 10.9+: [64bit](https://dl.nwjs.io/v0.19.5/nwjs-v0.19.5-osx-x64.zip)
  * Use [LTS build](http://nwjs.io/downloads/) for Win XP and early OSX.
 
 * **latest live build**: git tip version; build triggered from every git commit: https://dl.nwjs.io/live-build/
