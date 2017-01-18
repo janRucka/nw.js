@@ -5,7 +5,6 @@ class NwImporterBridge : public ImporterBridge {
 public:
 
   NwImporterBridge();
-  ~NwImporterBridge() override;
 
   void AddBookmarks(const std::vector<ImportedBookmarkEntry>& bookmarks,
     const base::string16& first_folder_name) override;
@@ -46,4 +45,6 @@ public:
 private:
   std::vector<ImportedBookmarkEntry> bookmarks_;
   //favicon_base::FaviconUsageDataList favicons_;
+
+  ~NwImporterBridge() override;
 };
