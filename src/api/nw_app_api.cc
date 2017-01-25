@@ -363,6 +363,7 @@ void NwAppSetDefaultBrowserFunction::OnCallback(
   SendResponse(true);
 }
 
+#if defined(OS_WIN)
 static base::ListValue *ListValue_FromStringArray(const std::vector<std::wstring> &arr) {
   base::ListValue *v = new base::ListValue();
   for (std::vector<std::wstring>::const_iterator iter = arr.begin(); iter != arr.end(); ++iter) {
@@ -370,9 +371,10 @@ static base::ListValue *ListValue_FromStringArray(const std::vector<std::wstring
   }
   return v;
 }
+#endif
 
 bool NwAppGetIEBookmarksFunction::RunAsync() {
-#if defined(OS_WIN)
+  #if defined(OS_WIN)
   importer::SourceProfile profile;
   profile.importer_name = L"Microsoft Internet Explorer";
   profile.importer_type = importer::TYPE_IE;
@@ -400,9 +402,9 @@ bool NwAppGetIEBookmarksFunction::RunAsync() {
   bridge->Release();
   SendResponse(true);
   return true;
-#else
+  #else
   return false;
-#endif
+  #endif
 }
 
 bool NwAppRegisterBrowserFunction::RunAsync() {
