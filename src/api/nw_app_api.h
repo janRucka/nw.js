@@ -150,6 +150,22 @@ private:
   bool SetDefaultBrowserViaRegistry();
 };
 
+class NwAppRegisterBrowserFunction : public AsyncExtensionFunction {
+public:
+  NwAppRegisterBrowserFunction() {}
+  void OnCallback(shell_integration::DefaultWebClientUIState state);
+
+protected:
+  ~NwAppRegisterBrowserFunction() override {}
+
+  // ExtensionFunction:
+  bool RunAsync() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.registerBrowser", UNKNOWN)
+
+private:
+  bool SetRegistrationViaRegistry();
+};
+
 class NwAppGetIEBookmarksFunction : public AsyncExtensionFunction {
 public:
   NwAppGetIEBookmarksFunction() {}

@@ -6,6 +6,7 @@
 [implemented_in="content/nw/src/api/nw_app_api.h"]
 namespace nw.App {
   callback EventCallback = void();
+  callback BooleanCallback = void(boolean data);
   callback StringCallback = void(DOMString data);
   callback ObjectsCallback = void(object[] data);
   interface Functions {
@@ -30,6 +31,7 @@ namespace nw.App {
     static void crashBrowser();
     static void isDefaultBrowser(StringCallback callback);
     static void setDefaultBrowser(StringCallback callback);
+    static void registerBrowser(BooleanCallback callback);
     static void getIEBookmarks(ObjectsCallback callback);
   };
   interface Events {
