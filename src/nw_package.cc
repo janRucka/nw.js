@@ -35,6 +35,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread_restrictions.h"
 #include "base/values.h"
+#include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_paths_internal.h"
 #include "third_party/zlib/google/zip.h"
 #include "content/nw/src/common/shell_switches.h"
@@ -290,6 +291,8 @@ base::DictionaryValue* Package::window() {
 
 void Package::CopyCookiesFromNW12() {
 #if defined(OS_WIN)
+// Link problems in debug.
+#ifndef _DEBUG
   base::ThreadRestrictions::SetIOAllowed(true);
   base::FilePath nw12Path, nw13Path;
   if (!chrome::GetDefaultUserDataDirectory(&nw13Path))
@@ -330,6 +333,7 @@ void Package::CopyCookiesFromNW12() {
   nw12Path = nw12Path.Append(L"Cookies");
   if (base::PathExists(nw12Path))
     base::CopyFile(nw12Path, nw13Path);
+#endif
 #endif
 }
 
