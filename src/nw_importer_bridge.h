@@ -5,7 +5,6 @@ class NwImporterBridge : public ImporterBridge {
 public:
 
   NwImporterBridge();
-  ~NwImporterBridge() override;
 
   void AddBookmarks(const std::vector<ImportedBookmarkEntry>& bookmarks,
     const base::string16& first_folder_name) override;
@@ -42,6 +41,9 @@ public:
   base::string16 GetLocalizedString(int message_id) override;
 
   const std::vector<ImportedBookmarkEntry>& GetBookmarks() const { return bookmarks_; } 
+
+protected:
+  ~NwImporterBridge() override;
 
 private:
   std::vector<ImportedBookmarkEntry> bookmarks_;
