@@ -48,6 +48,63 @@ void SetProxyConfigCallback(
   proxy_service->ResetConfigService(base::WrapUnique(new net::ProxyConfigServiceFixed(proxy_config)));
   done->Signal();
 }
+
+#if defined(OS_WIN)
+base::ListValue *ListValue_FromStringArray(const std::vector<std::wstring> &arr) {
+  base::ListValue *v = new base::ListValue();
+  for (std::vector<std::wstring>::const_iterator iter = arr.begin(); iter != arr.end(); ++iter) {
+    v->AppendString(*iter);
+  }
+  return v;
+}
+
+enum class IEImportType {
+  Bookmarks,
+  History
+  };
+
+base::ListValue* GetImportListFromIE(IEImportType importType) {
+  importer::SourceProfile profile;
+  profile.importer_name = L"Microsoft Internet Explorer";
+  profile.importer_type = importer::TYPE_IE;
+  profile.services_supported = 31;
+
+  NwImporterBridge* bridge = new NwImporterBridge;
+  IEImporter* importer = new IEImporter();
+  importer->StartImport(profile, 
+    importType == IEImportType::Bookmarks ? importer::FAVORITES : importer::HISTORY, 
+    bridge);
+  base::ListValue* values = new base::ListValue();
+
+  if (importType == IEImportType::Bookmarks) {
+    for (const ImportedBookmarkEntry& bookmark : bridge->GetBookmarks()) {
+      base::DictionaryValue* dict = new base::DictionaryValue;
+      dict->SetBoolean("in_toolbar", bookmark.in_toolbar);
+      dict->SetBoolean("in_folder", bookmark.is_folder);
+      dict->Set("path", ListValue_FromStringArray(bookmark.path));
+      dict->SetBoolean("in_toolbar", bookmark.in_toolbar);
+      dict->SetString("title", bookmark.title);
+      dict->SetString("url", bookmark.url.spec());
+      values->Append(dict);
+    }
+  } else if (importType == IEImportType::History) {
+    for (const ImporterURLRow& historyItem : bridge->GetHistory()) {
+      base::DictionaryValue* dict = new base::DictionaryValue;
+      dict->SetString("url", historyItem.url.spec());
+      dict->SetString("title", historyItem.title);
+      dict->SetInteger("visit_count", historyItem.visit_count);
+      dict->SetInteger("typed_count", historyItem.typed_count);
+      dict->SetDouble("last_visit", historyItem.last_visit.ToJsTime());
+      dict->SetBoolean("hidden", historyItem.hidden);
+      values->Append(dict);
+    }
+  }
+
+  importer->Release();
+  bridge->Release();
+  return values;
+}
+#endif
 } // namespace
 
 namespace extensions {
@@ -210,43 +267,23 @@ bool NwAppCrashBrowserFunction::RunAsync() {
   return true;
 }
 
-#if defined(OS_WIN)
-static base::ListValue *ListValue_FromStringArray(const std::vector<std::wstring> &arr) {
-  base::ListValue *v = new base::ListValue();
-  for (std::vector<std::wstring>::const_iterator iter = arr.begin(); iter != arr.end(); ++iter) {
-    v->AppendString(*iter);
-  }
-  return v;
-}
-#endif
-
 bool NwAppGetIEBookmarksFunction::RunAsync() {
 #if defined(OS_WIN)
-  importer::SourceProfile profile;
-  profile.importer_name = L"Microsoft Internet Explorer";
-  profile.importer_type = importer::TYPE_IE;
-  profile.services_supported = 31;
-
-  NwImporterBridge* bridge = new NwImporterBridge;
-  IEImporter* importer = new IEImporter();
-  importer->StartImport(profile, importer::FAVORITES, bridge);
+  base::ListValue* values = GetImportListFromIE(IEImportType::Bookmarks);
   results_ = std::unique_ptr<base::ListValue>(new base::ListValue());
-  base::ListValue* values = new base::ListValue();
-
-  for (const ImportedBookmarkEntry& bookmark : bridge->GetBookmarks()) {
-    base::DictionaryValue* dict = new base::DictionaryValue;
-    dict->SetBoolean("in_toolbar", bookmark.in_toolbar);
-    dict->SetBoolean("in_folder", bookmark.is_folder);
-    dict->Set("path", ListValue_FromStringArray(bookmark.path));
-    dict->SetBoolean("in_toolbar", bookmark.in_toolbar);
-    dict->SetString("title", bookmark.title);
-    dict->SetString("url", bookmark.url.spec());
-    values->Append(dict);
-  }
-
-  importer->Release();
   results_->Append(values);
-  bridge->Release();
+  SendResponse(true);
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool NwAppGetIEHistoryFunction::RunAsync() {
+#if defined(OS_WIN)
+  base::ListValue* values = GetImportListFromIE(IEImportType::History);
+  results_ = std::unique_ptr<base::ListValue>(new base::ListValue());
+  results_->Append(values);
   SendResponse(true);
   return true;
 #else
