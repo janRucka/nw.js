@@ -393,4 +393,11 @@ bool ProcessSingletonNotificationCallbackHook(const base::CommandLine& command_l
   return single_instance;
 }
 
+void OnMouseButtonFwdBwd(bool forward) {
+  std::unique_ptr<base::ListValue> argument(new base::ListValue());
+  if (forward)
+    nw::SendEventToApp("nw.App.onMouseForward", std::move(argument));
+  else
+    nw::SendEventToApp("nw.App.onMouseBackward", std::move(argument));
+}
 } // namespace nw
