@@ -45,6 +45,8 @@ gfx::ImageSkia* GetAppIcon();
 void SetMainExtensionId(const std::string& id);
 // ref in chrome/browser/extensions/extension_service.cc
 const std::string& GetMainExtensionId();
+// ref in content/browser/web_contents/web_contents_view_aura.cc
+void OnMouseButtonFwdBwd(bool forward);
 
 #if defined(OS_WIN)
 // ref in chrome/browser/app_icon_win.cc
