@@ -30,5 +30,7 @@ namespace nw.App {
   interface Events {
     static void onOpen(DOMString cmdline);
     static void onReopen();
+    static void onMouseForward();
+    static void onMouseBackward();
   };
 };
