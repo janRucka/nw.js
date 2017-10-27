@@ -72,6 +72,8 @@ if (is_component_build) {
 }
 
 nw_chrome_browser_sources = [
+        "src/nw_importer_bridge.cc",
+        "src/nw_importer_bridge.h",
         "src/api/nw_app_api.cc",
         "src/api/nw_app_api.h",
         "src/api/nw_clipboard_api.cc",
