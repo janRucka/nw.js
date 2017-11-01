@@ -130,6 +130,18 @@ protected:
   DECLARE_EXTENSION_FUNCTION("nw.App.getIEBookmarks", UNKNOWN)
 };
 
+class NwAppGetIEHistoryFunction : public AsyncExtensionFunction {
+public:
+  NwAppGetIEHistoryFunction() {}
+
+protected:
+  ~NwAppGetIEHistoryFunction() override {}
+
+  // ExtensionFunction:
+  bool RunAsync() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.getIEHistory", UNKNOWN)
+};
+
 class NwAppIsDefaultBrowserFunction : public AsyncExtensionFunction {
 public:
   NwAppIsDefaultBrowserFunction() {}
