@@ -147,12 +147,14 @@ bool NwCurrentWindowInternalCloseFunction::RunAsync() {
 
   bool force = params->force.get() ? *params->force : false;
   AppWindow* window = getAppWindow(this);
-  if (force)
-    base::MessageLoop::current()->task_runner()->PostTask(FROM_HERE,
-         base::Bind(&NwCurrentWindowInternalCloseFunction::DoClose, window));
-  else if (window->NWCanClose())
-    base::MessageLoop::current()->task_runner()->PostTask(FROM_HERE,
-         base::Bind(&NwCurrentWindowInternalCloseFunction::DoClose, window));
+  if (window) {
+    if (force)
+      base::MessageLoop::current()->task_runner()->PostTask(FROM_HERE,
+        base::Bind(&NwCurrentWindowInternalCloseFunction::DoClose, window));
+    else if (window->NWCanClose())
+      base::MessageLoop::current()->task_runner()->PostTask(FROM_HERE,
+        base::Bind(&NwCurrentWindowInternalCloseFunction::DoClose, window));
+  }
 
   SendResponse(true);
   return true;
