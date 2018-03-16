@@ -25,6 +25,12 @@
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
 
+#if defined(OS_WIN)
+#include "../nw_importer_bridge.h"
+#include "chrome/common/importer/imported_bookmark_entry.h"
+#include "chrome/utility/importer/ie_importer_win.h"
+#endif
+
 using namespace extensions::nwapi::nw__app;
 
 namespace {
@@ -199,5 +205,48 @@ bool NwAppCrashBrowserFunction::RunAsync() {
   return true;
 }
 
+#if defined(OS_WIN)
+static base::ListValue *ListValue_FromStringArray(const std::vector<std::wstring> &arr) {
+  base::ListValue *v = new base::ListValue();
+  for (std::vector<std::wstring>::const_iterator iter = arr.begin(); iter != arr.end(); ++iter) {
+    v->AppendString(*iter);
+  }
+  return v;
+}
+#endif
+
+bool NwAppGetIEBookmarksFunction::RunAsync() {
+#if defined(OS_WIN)
+  importer::SourceProfile profile;
+  profile.importer_name = L"Microsoft Internet Explorer";
+  profile.importer_type = importer::TYPE_IE;
+  profile.services_supported = 31;
+
+  NwImporterBridge* bridge = new NwImporterBridge;
+  IEImporter* importer = new IEImporter();
+  importer->StartImport(profile, importer::FAVORITES, bridge);
+  results_ = std::unique_ptr<base::ListValue>(new base::ListValue());
+  base::ListValue* values = new base::ListValue();
+
+  for (const ImportedBookmarkEntry& bookmark : bridge->GetBookmarks()) {
+    base::DictionaryValue* dict = new base::DictionaryValue;
+    dict->SetBoolean("in_toolbar", bookmark.in_toolbar);
+    dict->SetBoolean("in_folder", bookmark.is_folder);
+    dict->SetList("path", std::unique_ptr<base::ListValue>(ListValue_FromStringArray(bookmark.path)));
+    dict->SetBoolean("in_toolbar", bookmark.in_toolbar);
+    dict->SetString("title", bookmark.title);
+    dict->SetString("url", bookmark.url.spec());
+    values->Append(std::unique_ptr<base::DictionaryValue>(dict));
+  }
+
+  importer->Release();
+  results_->Append(std::unique_ptr<base::ListValue>(values));
+  bridge->Release();
+  SendResponse(true);
+  return true;
+#else
+  return false;
+#endif
+}
 
 } // namespace extensions
