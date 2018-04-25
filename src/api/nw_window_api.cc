@@ -1,5 +1,8 @@
 #include "content/nw/src/api/nw_window_api.h"
 
+#include <chrono>
+#include <set>
+
 #include "base/base64.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
@@ -132,7 +135,32 @@ static HWND getHWND(AppWindow* window) {
 #endif
 
 void NwCurrentWindowInternalCloseFunction::DoClose(AppWindow* window) {
-  window->GetBaseWindow()->ForceClose();
+  if (window) {
+    NativeAppWindow* nativeWindow = window->GetBaseWindow();
+    if (nativeWindow)
+      nativeWindow->ForceClose();
+  }
+}
+
+void PostClose(AppWindow* window)
+{
+  static std::map<AppWindow*, std::chrono::system_clock::time_point> closingWindows;
+  std::map<AppWindow*, std::chrono::system_clock::time_point>::iterator it = closingWindows.begin();
+  for (; it != closingWindows.end(); )
+  {
+    if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - it->second) > std::chrono::seconds(15))
+      closingWindows.erase(it++);
+    else
+      ++it;
+  }
+
+  it = closingWindows.find(window);
+  if (it == closingWindows.end())
+  {
+    closingWindows[window] = std::chrono::system_clock::now();
+    base::MessageLoop::current()->task_runner()->PostTask(FROM_HERE,
+      base::Bind(&NwCurrentWindowInternalCloseFunction::DoClose, window));
+  }
 }
 
 ExtensionFunction::ResponseAction
@@ -143,12 +171,10 @@ NwCurrentWindowInternalCloseFunction::Run() {
 
   bool force = params->force.get() ? *params->force : false;
   AppWindow* window = getAppWindow(this);
-  if (force)
-    base::MessageLoop::current()->task_runner()->PostTask(FROM_HERE,
-         base::Bind(&NwCurrentWindowInternalCloseFunction::DoClose, window));
-  else if (window->NWCanClose())
-    base::MessageLoop::current()->task_runner()->PostTask(FROM_HERE,
-         base::Bind(&NwCurrentWindowInternalCloseFunction::DoClose, window));
+  if (window) {
+    if (force || window->NWCanClose())
+      PostClose(window);
+  }
 
   return RespondNow(NoArguments());
 }
