@@ -117,5 +117,17 @@ class NwAppCrashBrowserFunction : public UIThreadExtensionFunction {
   DECLARE_EXTENSION_FUNCTION("nw.App.crashBrowser", UNKNOWN)
 };
 
+class NwAppGetIEBookmarksFunction : public UIThreadExtensionFunction {
+public:
+  NwAppGetIEBookmarksFunction() {}
+
+protected:
+  ~NwAppGetIEBookmarksFunction() override {}
+
+  // ExtensionFunction:
+  ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.getIEBookmarks", UNKNOWN)
+};
+
 } // namespace extensions
 #endif
