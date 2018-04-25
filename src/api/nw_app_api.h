@@ -117,5 +117,17 @@ class NwAppCrashBrowserFunction : public AsyncExtensionFunction {
   DECLARE_EXTENSION_FUNCTION("nw.App.crashBrowser", UNKNOWN)
 };
 
+class NwAppGetIEBookmarksFunction : public AsyncExtensionFunction {
+public:
+  NwAppGetIEBookmarksFunction() {}
+
+protected:
+  ~NwAppGetIEBookmarksFunction() override {}
+
+  // ExtensionFunction:
+  bool RunAsync() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.getIEBookmarks", UNKNOWN)
+};
+
 } // namespace extensions
 #endif
