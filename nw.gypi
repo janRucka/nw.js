@@ -87,6 +87,8 @@
       'defines!': ['CONTENT_IMPLEMENTATION'],
       'msvs_disabled_warnings': [ 4267, 4800, 4189 ],
       'sources': [
+        'src/nw_importer_bridge.cc',
+        'src/nw_importer_bridge.h',
         'src/api/nw_app_api.cc',
         'src/api/nw_app_api.h',
         'src/api/nw_clipboard_api.cc',
