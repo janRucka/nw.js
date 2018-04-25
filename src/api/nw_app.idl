@@ -6,6 +6,7 @@
 [implemented_in="content/nw/src/api/nw_app_api.h"]
 namespace nw.App {
   callback EventCallback = void();
+  callback ObjectsCallback = void(object[] data);
   interface Functions {
     // crash the renderer for testing
     [nocompile] static void crashRenderer();
@@ -26,6 +27,7 @@ namespace nw.App {
     static DOMString[] getArgvSync();
     static DOMString getDataPath();
     static void crashBrowser();
+    static void getIEBookmarks(ObjectsCallback callback);
   };
   interface Events {
     static void onOpen(DOMString cmdline);
