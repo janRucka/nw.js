@@ -411,4 +411,67 @@ void NwAppSetDefaultBrowserFunction::OnCallback(
   SendResponse(true);
 }
 
+
+bool NwAppRegisterBrowserFunction::RunAsync() {
+  scoped_refptr<shell_integration::DefaultBrowserWorker> browserWorker(
+    new shell_integration::DefaultBrowserWorker(
+      base::Bind(static_cast<void (NwAppRegisterBrowserFunction::*)
+      (shell_integration::DefaultWebClientState)>(&NwAppRegisterBrowserFunction::OnCallback),
+        base::RetainedRef(this))));
+
+  browserWorker->StartRegistration();
+  return true;
+}
+
+void NwAppRegisterBrowserFunction::OnCallback(
+  shell_integration::DefaultWebClientState state) {
+  results_ = std::unique_ptr<base::ListValue>(new base::ListValue());
+  switch (state)
+  {
+  case shell_integration::DefaultWebClientState::NOT_DEFAULT:
+    if (SetRegistrationViaRegistry())
+      results_->AppendBoolean(true);
+    else
+      results_->AppendBoolean(false);
+    break;
+  case shell_integration::DefaultWebClientState::IS_DEFAULT:
+    results_->AppendBoolean(true);
+    break;
+  case shell_integration::DefaultWebClientState::UNKNOWN_DEFAULT:
+  case shell_integration::DefaultWebClientState::NUM_DEFAULT_STATES:
+  default:
+    results_->AppendBoolean(false);
+  }
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  SendResponse(true);
+}
+
+bool NwAppRegisterBrowserFunction::SetRegistrationViaRegistry() {
+#if defined(OS_WIN)
+  if (base::win::GetVersion() > base::win::VERSION_WIN7)
+    return false;
+
+  base::FilePath chrome_exe;
+  if (!PathService::Get(base::FILE_EXE, &chrome_exe))
+    return false;
+
+  std::vector<std::unique_ptr<RegistryEntry>> registryItems;
+  registryItems.push_back(std::unique_ptr<RegistryEntry>(new RegistryEntry(L"Software\\Classes\\SeznamHTML", L"Seznam HTML Document")));
+  registryItems.push_back(std::unique_ptr<RegistryEntry>(new RegistryEntry(L"Software\\Classes\\SeznamHTML\\DefaultIcon", chrome_exe.value() + L",1")));
+  registryItems.push_back(std::unique_ptr<RegistryEntry>(new RegistryEntry(L"Software\\Classes\\SeznamHTML\\shell", L"open")));
+  registryItems.push_back(std::unique_ptr<RegistryEntry>(new RegistryEntry(L"Software\\Classes\\SeznamHTML\\shell\\open\\command", L"\"" + chrome_exe.value() + L"\"" + std::wstring(L"-surl=\"%1\""))));
+
+  registryItems.push_back(std::unique_ptr<RegistryEntry>(new RegistryEntry(L"Software\\Seznam.cz\\WebBrowser\\Capabilities\\FileAssociations", L"html", L"SeznamHTML")));
+  registryItems.push_back(std::unique_ptr<RegistryEntry>(new RegistryEntry(L"Software\\Seznam.cz\\WebBrowser\\Capabilities\\FileAssociations", L"htm", L"SeznamHTML")));
+  registryItems.push_back(std::unique_ptr<RegistryEntry>(new RegistryEntry(L"Software\\Seznam.cz\\WebBrowser\\Capabilities\\FileAssociations", L"pdf", L"SeznamHTML")));
+  registryItems.push_back(std::unique_ptr<RegistryEntry>(new RegistryEntry(L"Software\\Classes\\.htm\\OpenWithProgids", L"SeznamHTML", L"")));
+  registryItems.push_back(std::unique_ptr<RegistryEntry>(new RegistryEntry(L"Software\\Classes\\.html\\OpenWithProgids", L"SeznamHTML", L"")));
+  registryItems.push_back(std::unique_ptr<RegistryEntry>(new RegistryEntry(L"Software\\Classes\\.pdf\\OpenWithProgids", L"SeznamHTML", L"")));
+
+  return AddToHKCURegistry(registryItems);
+
+#endif
+  return false;
+}
+
 } // namespace extensions
