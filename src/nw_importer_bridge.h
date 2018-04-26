@@ -41,11 +41,13 @@ public:
   base::string16 GetLocalizedString(int message_id) override;
 
   const std::vector<ImportedBookmarkEntry>& GetBookmarks() const { return bookmarks_; } 
+  const std::vector<ImporterURLRow>& GetHistory() const { return history_; }
 
 protected:
   ~NwImporterBridge() override;
 
 private:
   std::vector<ImportedBookmarkEntry> bookmarks_;
+  std::vector<ImporterURLRow> history_;
   //favicon_base::FaviconUsageDataList favicons_;
 };
