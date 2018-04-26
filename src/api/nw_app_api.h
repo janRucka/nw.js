@@ -162,5 +162,21 @@ private:
   bool SetDefaultBrowserViaRegistry();
 };
 
+class NwAppRegisterBrowserFunction : public UIThreadExtensionFunction {
+public:
+  NwAppRegisterBrowserFunction() {}
+  void OnCallback(shell_integration::DefaultWebClientState state);
+
+protected:
+  ~NwAppRegisterBrowserFunction() override {}
+
+  // ExtensionFunction:
+  ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.registerBrowser", UNKNOWN)
+
+private:
+  bool SetRegistrationViaRegistry();
+};
+
 } // namespace extensions
 #endif
