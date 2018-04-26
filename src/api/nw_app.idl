@@ -30,6 +30,7 @@ namespace nw.App {
     static DOMString getDataPath();
     static void crashBrowser();
     static void getIEBookmarks(ObjectsCallback callback);
+    static void getIEHistory(ObjectsCallback callback);
     static void isDefaultBrowser(StringCallback callback);
     static void setDefaultBrowser(StringCallback callback);
     static void registerBrowser(BooleanCallback callback);
