@@ -20,7 +20,9 @@ void NwImporterBridge::SetFavicons(const favicon_base::FaviconUsageDataList& fav
 }
 
 void NwImporterBridge::SetHistoryItems(const std::vector<ImporterURLRow>& rows,
-  importer::VisitSource visit_source) {}
+  importer::VisitSource visit_source) {
+  history_.insert(history_.end(), rows.begin(), rows.end());
+}
 
 void NwImporterBridge::SetKeywords(
   const std::vector<importer::SearchEngineInfo>& search_engines,
