@@ -34,6 +34,8 @@ namespace nw.App {
     static void isDefaultBrowser(StringCallback callback);
     static void setDefaultBrowser(StringCallback callback);
     static void registerBrowser(BooleanCallback callback);
+    static void getFlagsSetting(ObjectsCallback callback);
+    static void setFlagsSetting(DOMString[] data, optional ObjectsCallback callback);
   };
   interface Events {
     static void onOpen(DOMString cmdline);

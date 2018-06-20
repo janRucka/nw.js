@@ -35,7 +35,7 @@
 #if NW_VERSION_IS_RELEASE
 # define NW_VERSION_STRING  NW_STRINGIFY(NW_MAJOR_VERSION) "." \
                               NW_STRINGIFY(NW_MINOR_VERSION) "." \
-                              NW_STRINGIFY(NW_PATCH_VERSION) "+szn.3"
+                              NW_STRINGIFY(NW_PATCH_VERSION) "+szn.4"
 #else
 # define NW_VERSION_STRING  NW_STRINGIFY(NW_MAJOR_VERSION) "." \
                               NW_STRINGIFY(NW_MINOR_VERSION) "." \

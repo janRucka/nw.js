@@ -190,5 +190,29 @@ private:
   bool SetRegistrationViaRegistry();
 };
 
+class NwAppGetFlagsSettingFunction : public AsyncExtensionFunction {
+public:
+  NwAppGetFlagsSettingFunction() {}
+
+protected:
+  ~NwAppGetFlagsSettingFunction() override {}
+
+  // ExtensionFunction:
+  bool RunAsync() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.getFlagsSetting", UNKNOWN)
+};
+
+class NwAppSetFlagsSettingFunction : public AsyncExtensionFunction {
+public:
+  NwAppSetFlagsSettingFunction() {}
+
+protected:
+  ~NwAppSetFlagsSettingFunction() override {}
+
+  // ExtensionFunction:
+  bool RunAsync() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.setFlagsSetting", UNKNOWN)
+};
+
 } // namespace extensions
 #endif
