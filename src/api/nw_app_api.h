@@ -190,5 +190,29 @@ private:
   bool SetRegistrationViaRegistry();
 };
 
+class NwAppGetFlagsSettingFunction : public UIThreadExtensionFunction {
+public:
+  NwAppGetFlagsSettingFunction() {}
+
+protected:
+  ~NwAppGetFlagsSettingFunction() override {}
+
+  // ExtensionFunction:
+  ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.getFlagsSetting", UNKNOWN)
+};
+
+class NwAppSetFlagsSettingFunction : public UIThreadExtensionFunction {
+public:
+  NwAppSetFlagsSettingFunction() {}
+
+protected:
+  ~NwAppSetFlagsSettingFunction() override {}
+
+  // ExtensionFunction:
+  ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.setFlagsSetting", UNKNOWN)
+};
+
 } // namespace extensions
 #endif
