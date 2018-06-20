@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("displayChangeAudioButton").addEventListener("click", displayChangeAudioButtonFunction);
     document.getElementById("defaultBrowserButton").addEventListener("click", defaultBrowserButtonFunction);
     document.getElementById("ieBookmarksButton").addEventListener("click", ieBookmarksButtonFunction);
+    document.getElementById("flagsSettingButton").addEventListener("click", flagsSettingButtonFunction);
 
     var webview = document.getElementById("webviewId");
     webview.addEventListener("loadstop", function () {
