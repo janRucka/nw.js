@@ -132,6 +132,18 @@ protected:
   DECLARE_EXTENSION_FUNCTION("nw.App.getIEBookmarks", UNKNOWN)
 };
 
+class NwAppGetIEHistoryFunction : public UIThreadExtensionFunction {
+public:
+  NwAppGetIEHistoryFunction() {}
+
+protected:
+  ~NwAppGetIEHistoryFunction() override {}
+
+  // ExtensionFunction:
+  ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("nw.App.getIEHistory", UNKNOWN)
+};
+
 class NwAppIsDefaultBrowserFunction : public UIThreadExtensionFunction {
 public:
   NwAppIsDefaultBrowserFunction() {}
