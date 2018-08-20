@@ -1,0 +1,23 @@
+{
+  "name": "Tests",
+  "version": "1.0",
+  "permissions": [ "webview", "fileSystem", "file://*" ],
+  "app": {
+    "background": {
+      "scripts": [ "./src/start.js" ]
+    }
+  },
+  "webview": {
+    "partitions": [
+      {
+        "name": "res",
+        "accessible_resources": [
+          "https://*/*",
+          "http://*/*",
+          "file://*",
+          "<all_urls>"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>webview-canGoBack</title>
+    <script type="text/javascript" src="result.js"></script>
+    <script type="text/javascript" src="navigation.js"></script>
+    <script type="text/javascript" src="processForWebview.js"></script>
+    <script type="text/javascript" src="sslChange.js"></script>
+    <script type="text/javascript" src="download.js"></script>
+    <script type="text/javascript" src="certificateFix.js"></script>
+    <script type="text/javascript" src="historyTitle.js"></script>
+    <script type="text/javascript" src="titleFaviconEvent.js"></script>
+    <script type="text/javascript" src="history.js"></script>
+    <script type="text/javascript" src="targetUrlUpdate.js"></script>
+    <script type="text/javascript" src="displayChangeAudio.js"></script>
+    <script type="text/javascript" src="defaultBrowser.js"></script>
+    <script type="text/javascript" src="ieBookmarks.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+</head>
+<body>
+    <div style="height:480px">
+        <webview id="webviewId" partition="persist:res" style="width:100%; height:100%;" autosize="true"
+                 src="https://www.google.com"></webview>
+    </div>
+    <div>
+        Website:
+        <input id="website" type="text" value="https://www.youtube.com">
+        <button id="goButton" type="button">Go!</button><br />
+        <button id="canGoBackButton" type="button">webview-canGoBack</button><br />
+        <button id="backButton" type="button">webview-back</button><br />
+        <br />
+        <button id="processButton" type="button">Process test</button><br />
+        <button id="SSLChangeButton" type="button">sslchange event test</button><br />
+        <button id="downloadIdButton" type="button">downloadId test</button><br />
+        <button id="certificateFixButton" type="button">certificateFix test</button><br />
+        <button id="historyTitleButton" type="button">historyTitle test</button><br />
+        <button id="titleFaviconEventButton" type="button">titleFaviconEvent test</button><br />
+        <button id="historyButton" type="button">history test</button><br />
+        <button id="targetUrlUpdateButton" type="button">targetUrlUpdate test</button><br />
+        <button id="displayChangeAudioButton" type="button">displayChangeAudio test</button><br />
+        <button id="defaultBrowserButton" type="button">defaultBrowser test</button><br />
+        <button id="ieBookmarksButton" type="button">ieBookmarks test</button><br />
+    </div>
+    <div id="testResults"></div>
+</body>
+</html>
