@@ -35,7 +35,9 @@
 #include "../nw_importer_bridge.h"
 #include "base/win/windows_version.h"
 #include "chrome/common/importer/imported_bookmark_entry.h"
+#include "chrome/install_static/install_util.h"
 #include "chrome/installer/util/registry_entry.h"
+#include "chrome/installer/util/shell_util.h"
 #include "chrome/installer/util/work_item.h"
 #include "chrome/installer/util/work_item_list.h"
 #include "chrome/utility/importer/ie_importer_win.h"
@@ -589,6 +591,18 @@ NwAppSetFlagsSettingFunction::Run() {
 
   base::ListValue* values = GetFlagsSettings();
   return RespondNow(OneArgument(std::unique_ptr<base::Value>(static_cast<base::Value*>(values))));
+}
+
+bool NwAppGetBrowserRegistryIdFunction::RunNWSync(base::ListValue* response, std::string* error) {
+#if defined(OS_WIN)
+  base::string16 suffix;
+  ShellUtil::GetUserSpecificRegistrySuffix(&suffix);
+  base::string16 registryId(install_static::GetBaseAppName());
+  registryId.append(suffix);
+  response->AppendString(registryId);
+  return true;
+#endif
+  return false;
 }
 
 } // namespace extensions

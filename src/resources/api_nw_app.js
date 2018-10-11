@@ -4,6 +4,7 @@ var sendRequest = require('sendRequest');
 
 var fullArgv = null;
 var dataPath;
+var browserRegistryId;
 
 var eventsMap = {
   'open':             'onOpen',
@@ -120,6 +121,14 @@ nw_binding.registerCustomHook(function(bindingsAPI) {
   });
   bindingsAPI.compiledApi.__defineGetter__('startPath', function() {
     return nw.App.getStartPath();
+  });
+  apiFunctions.setHandleRequest('getBrowserRegistryId', function () {
+      return sendRequest.sendRequestSync('nw.App.getBrowserRegistryId', [], this.definition.parameters, {})[0];
+  });
+  bindingsAPI.compiledApi.__defineGetter__('browserRegistryId', function () {
+    if (!browserRegistryId)
+      browserRegistryId = nw.App.getBrowserRegistryId();
+    return browserRegistryId;
   });
   bindingsAPI.compiledApi.registerGlobalHotKey = function() {
     return nw.Shortcut.registerGlobalHotKey.apply(nw.Shortcut, arguments);
