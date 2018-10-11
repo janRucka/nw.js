@@ -216,5 +216,18 @@ protected:
   DECLARE_EXTENSION_FUNCTION("nw.App.setFlagsSetting", UNKNOWN)
 };
 
+class NwAppGetBrowserRegistryIdFunction : public NWSyncExtensionFunction {
+public:
+  NwAppGetBrowserRegistryIdFunction() {}
+  bool RunNWSync(base::ListValue* response, std::string* error) override;
+
+protected:
+  ~NwAppGetBrowserRegistryIdFunction() override {}
+
+  DECLARE_EXTENSION_FUNCTION("nw.App.getBrowserRegistryId", UNKNOWN)
+private:
+  DISALLOW_COPY_AND_ASSIGN(NwAppGetBrowserRegistryIdFunction);
+};
+
 } // namespace extensions
 #endif
